@@ -9,7 +9,7 @@ fn main() {
 
     let matches = App::new("dough")
         .version("0.0.1")
-        .author("Anubhab P, injuly")
+        .author("fuzzymfx, injuly")
         .about("A command-line tool to create presentations from Markdown")
         .subcommand(
             SubCommand::with_name("new")
@@ -19,7 +19,15 @@ fn main() {
         .subcommand(
             SubCommand::with_name("present")
                 .about("Present a deck")
-                .arg(Arg::with_name("project-name").required(true)),
+                .arg(Arg::with_name("project-name").required(true))
+                .arg(
+                    Arg::with_name("mode")
+                        .long("mode")
+                        .takes_value(true)
+                        .possible_values(&["html", "term"])
+                        .default_value("term")
+                        .help("Choose the mode of presentation: html or term"),
+                ),
         )
         .get_matches();
 
@@ -48,12 +56,30 @@ fn present_project(args: &clap::ArgMatches, log: &mut Logger) {
     let project_name = args
         .value_of("project-name")
         .expect("project name is required");
-    log.info(format!("Presenting project '{}'", project_name));
+    let mode = args.value_of("mode").unwrap_or("term"); // Default to terminal mode
+
+    log.info(format!(
+        "Presenting project '{}' in '{}' mode",
+        project_name, mode
+    ));
     let cwd = env::current_dir().expect("Failed to get current working directory");
     let project = Project::new(project_name, &cwd.to_str().unwrap());
 
-    if let Err(err) = project.present() {
-        log.error(format!("Could not present project, error: {}", err));
-        process::exit(2);
+    match mode {
+        "html" => {
+            // if let Err(err) = project.present_html() {
+            //     log.error(format!("Could not present project in HTML, error: {}", err));
+            //     process::exit(3);
+            // }
+        }
+        "term" | _ => {
+            if let Err(err) = project.present_term() {
+                log.error(format!(
+                    "Could not present project in terminal, error: {}",
+                    err
+                ));
+                process::exit(4);
+            }
+        }
     }
 }
