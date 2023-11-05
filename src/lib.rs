@@ -1,3 +1,5 @@
+mod prettify;
+
 extern crate termion;
 
 use std::error::Error;
@@ -50,7 +52,8 @@ impl Project {
     }
 
     fn render(file_contents: &str) -> std::result::Result<(), Box<dyn Error>> {
-        print!("{}", file_contents);
+        let slide = prettify::prettify(file_contents)?;
+        print!("{}", slide);
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode()?;
         stdout.flush().unwrap();
