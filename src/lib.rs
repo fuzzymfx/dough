@@ -21,6 +21,7 @@ enum NavigationAction {
 
 pub struct Project {
     fs_path: std::path::PathBuf,
+    template: std::path::PathBuf,
 }
 
 // Define a custom error type.
@@ -42,9 +43,13 @@ impl std::error::Error for DoughError {
 }
 
 impl Project {
-    pub fn new(name: &str, workdir: &str) -> Project {
+    pub fn new(name: &str, workdir: &str, template: &str) -> Project {
         Project {
             fs_path: std::path::Path::new(workdir).join(name).to_path_buf(),
+            template: std::path::Path::new(workdir)
+                .join("templates")
+                .join(template)
+                .to_path_buf(),
         }
     }
 
@@ -55,7 +60,7 @@ impl Project {
         }
 
         let md_path = self.fs_path.join("1.md");
-        let md_content = "# Hello, world!";
+        let md_content = fs::read_to_string(self.template.join("template.md"))?;
         return fs::write(md_path, md_content);
     }
 

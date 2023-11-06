@@ -14,7 +14,14 @@ fn main() {
         .subcommand(
             SubCommand::with_name("new")
                 .about("Create a new project")
-                .arg(Arg::with_name("project-name").required(true)),
+                .arg(Arg::with_name("project-name").required(true))
+                .arg(
+                    Arg::with_name("template")
+                        .long("template")
+                        .takes_value(true)
+                        .default_value("default")
+                        .help("Choose a template for the project"),
+                ),
         )
         .subcommand(
             SubCommand::with_name("present")
@@ -42,9 +49,11 @@ fn create_project(args: &clap::ArgMatches, log: &mut Logger) {
     let project_name = args
         .value_of("project-name")
         .expect("project name is required");
+
+    let template = args.value_of("template").unwrap_or("default");
     log.info(format!("Creating new project '{}'", project_name));
     let cwd = env::current_dir().expect("Failed to get current working directory");
-    let project = Project::new(project_name, &cwd.to_str().unwrap());
+    let project = Project::new(project_name, &cwd.to_str().unwrap(), template);
 
     if let Err(err) = project.init_project() {
         log.error(format!("Could not create project, error: {}", err));
@@ -63,7 +72,7 @@ fn present_project(args: &clap::ArgMatches, log: &mut Logger) {
         project_name, mode
     ));
     let cwd = env::current_dir().expect("Failed to get current working directory");
-    let project = Project::new(project_name, &cwd.to_str().unwrap());
+    let project = Project::new(project_name, &cwd.to_str().unwrap(), "default");
 
     match mode {
         "html" => {
