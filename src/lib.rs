@@ -44,8 +44,14 @@ impl std::error::Error for DoughError {
 
 impl Project {
     pub fn new(name: &str, workdir: &str, template: &str) -> Project {
+        let project_dir = workdir.to_owned() + "/projects";
+
+        if !std::path::Path::new(&project_dir).exists() {
+            fs::create_dir(&project_dir).expect("Could not create projects directory");
+        }
+
         Project {
-            fs_path: std::path::Path::new(workdir).join(name).to_path_buf(),
+            fs_path: std::path::Path::new(& project_dir).join(name).to_path_buf(),
             template: std::path::Path::new(workdir)
                 .join("templates")
                 .join(template)

@@ -41,12 +41,12 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 ### Usage
 
-Dough provides two main subcommands: new and present.
+Dough provides two main subcommands: create and present.
 
 #### Creating a New Project
 
 ```bash
-dough new <project-name> [--template <template-name>]
+dough create <project-name> [--template <template-name>]
 ```
 
 `<project-name>`: The name of the new project (required).
@@ -54,8 +54,11 @@ dough new <project-name> [--template <template-name>]
 Example:
 
 ```bash
-dough new my_presentation --template fancy_template
+dough create my_presentation --template fancy_template
 ```
+
+You can add new `templates` under the templates folder. Each template is a folder containing a `template.md` file that contains the template's Markdown code.
+<!-- You can also add a `template.css` file to add custom CSS styling to the template. -->
 
 #### Presenting a Deck
 
