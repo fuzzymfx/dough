@@ -76,15 +76,16 @@ dough present my_presentation --mode html
 TODO:
 
 - [x] Proper support for line breaks and spaces.
-- [ ] Improve the rendering engine handle all possible Markdown elements
+- [ ] Improve the rendering engine:
+  - [ ] handle all possible Markdown elements
 - [ ] Rendering style adjustment: differntiating different types of headings using color etc. and alignment
 - [ ] Full arrow key support + more hotkeys
 - [ ] Syntax Highlighting
 
 ## Acknowledgements
 
-Authors: fuzzymfx, injuly
+Authors: [fuzzymfx](https://github.com/fuzzymfx), [injuly](https://github.com/injuly)
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
