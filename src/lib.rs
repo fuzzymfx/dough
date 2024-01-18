@@ -8,6 +8,7 @@ use std::fs;
 
 use std::io::{stdin, stdout, Result, Write};
 use std::process::exit;
+use termion::cursor::{Down, Up};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
@@ -15,6 +16,8 @@ use termion::raw::IntoRawMode;
 enum NavigationAction {
     Next,
     Previous,
+    ScrollUp,
+    ScrollDown,
     Exit,
     None,
 }
@@ -79,6 +82,9 @@ impl Project {
 
         for c in stdin.keys() {
             match c? {
+                //add cases for up and down to replicate mouse scroll
+                Key::Up => return Ok(NavigationAction::ScrollUp),
+                Key::Down => return Ok(NavigationAction::ScrollDown),
                 Key::Right => return Ok(NavigationAction::Next),
                 Key::Left => return Ok(NavigationAction::Previous),
                 Key::Char('q') => return Ok(NavigationAction::Exit),
@@ -148,6 +154,14 @@ impl Project {
                     if current_slide > 1 {
                         current_slide -= 1;
                     }
+                }
+                NavigationAction::ScrollUp => {
+                    write!(stdout(), "{}", Up(1)).unwrap();
+                    stdout().flush().unwrap();
+                }
+                NavigationAction::ScrollDown => {
+                    write!(stdout(), "{}", Down(1)).unwrap();
+                    stdout().flush().unwrap();
                 }
                 NavigationAction::Exit => {
                     exit(0);
