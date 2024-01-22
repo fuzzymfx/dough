@@ -79,9 +79,9 @@ impl Project {
 
         for c in stdin.keys() {
             match c? {
-                Key::Right => return Ok(NavigationAction::Next),
-                Key::Left => return Ok(NavigationAction::Previous),
-                Key::Char('q') => return Ok(NavigationAction::Exit),
+                Key::Right | Key::Char('l') | Key::Char('L') => return Ok(NavigationAction::Next),
+                Key::Left | Key::Char('h') | Key::Char('H') => return Ok(NavigationAction::Previous),
+                Key::Char('q') | Key::Char('Q') => return Ok(NavigationAction::Exit),
                 _ => continue,
             }
         }
