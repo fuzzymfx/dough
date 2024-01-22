@@ -147,20 +147,31 @@ pub fn prettify(md_text: &str) -> Result<String, String> {
     let mut lines = md_text.lines();
     let mut front_matter = Vec::new();
 
-    if let Some(first_line) = lines.next() {
-        if first_line == "---" {
+    let mut first_line = lines.next();
+
+    if let Some(line) = first_line {
+        if line == "---" {
             while let Some(line) = lines.next() {
                 if line == "---" {
                     break;
                 }
-                front_matter.push(line.to_string());
+                else{
+                    front_matter.push(line.to_string());
+                }
             }
+            first_line = lines.next(); 
         }
     }
-    // parse_front_matter(&front_matter);
 
-    
-    let md_text = lines.collect::<Vec<&str>>().join("\n");
+    let md_text = if let Some(line) = first_line {
+        // If there are lines left, join them and add a newline at the end
+        std::iter::once(line).chain(lines).collect::<Vec<&str>>().join("\n") + "\n"
+    } else {
+        // If there are no lines left, return an empty string
+        String::new()
+    };
+
+
     let parsed = markdown::to_mdast(&md_text, &markdown::ParseOptions::default());
     let mut prettified = String::new();
 
