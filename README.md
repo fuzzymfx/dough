@@ -74,6 +74,13 @@ Example:
 dough present my_presentation --mode html
 ```
 
+#### Navigating through the Presentation
+
+You can use arrow keys to navigate: right and left arrows to move between slides, and up and down arrows to move between lines.
+Vim keybindings are also supported: `h` and `l` to move between slides, and `j` and `k` to move between lines.
+The letters are case-insensitive.
+`q` to quit the presentation.
+
 ## Contributing
 
 TODO:

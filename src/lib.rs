@@ -54,7 +54,7 @@ impl Project {
         }
 
         Project {
-            fs_path: std::path::Path::new(& project_dir).join(name).to_path_buf(),
+            fs_path: std::path::Path::new(&project_dir).join(name).to_path_buf(),
             template: std::path::Path::new(workdir)
                 .join("templates")
                 .join(template)
@@ -82,12 +82,13 @@ impl Project {
 
         for c in stdin.keys() {
             match c? {
-                //add cases for up and down to replicate mouse scroll
+                Key::Right | Key::Char('l') | Key::Char('L') => return Ok(NavigationAction::Next),
+                Key::Left | Key::Char('h') | Key::Char('H') => {
+                    return Ok(NavigationAction::Previous)
+                }
+                Key::Char('q') | Key::Char('Q') => return Ok(NavigationAction::Exit),
                 Key::Up => return Ok(NavigationAction::ScrollUp),
                 Key::Down => return Ok(NavigationAction::ScrollDown),
-                Key::Right => return Ok(NavigationAction::Next),
-                Key::Left => return Ok(NavigationAction::Previous),
-                Key::Char('q') => return Ok(NavigationAction::Exit),
                 _ => continue,
             }
         }
