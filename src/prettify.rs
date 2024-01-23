@@ -1,6 +1,6 @@
 use colored::*;
 use markdown::mdast::{self};
-use termion::color;
+// use termion::color;
 use regex::Regex;
 
 fn join_children_with(join_fn: fn(String) -> String, children: Vec<mdast::Node>) -> String {
@@ -21,7 +21,6 @@ fn join_children(children: Vec<mdast::Node>) -> String {
 // Recursively visit the mdast tree and return a string
 fn visit_md_node(node: mdast::Node) -> Option<String> {
     match node {
-
         mdast::Node::Root(root) => {
             let mut result = String::default();
             result.push_str(&join_children(root.children));
@@ -37,13 +36,15 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
             if re.is_match(text_start) {
                 for cap in re.captures_iter(text_start) {
                     let matched_text = &cap[1];
-                    let strikethrough_text = matched_text.chars().map(|c| format!("{}{}", c, '\u{0336}')).collect::<String>();
+                    let strikethrough_text = matched_text
+                        .chars()
+                        .map(|c| format!("{}{}", c, '\u{0336}'))
+                        .collect::<String>();
                     let text_to_replace = format!("~~{}~~", matched_text);
-                    let replaced_text = text_start.replace( &text_to_replace, &strikethrough_text);
+                    let replaced_text = text_start.replace(&text_to_replace, &strikethrough_text);
                     result.push_str(&replaced_text);
                 }
-            }
-            else {
+            } else {
                 result.push_str(text_start);
             }
 
@@ -51,18 +52,36 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
             Some(result)
         }
 
-        mdast::Node::Text(text) =>  Some(text.value),
-        
+        mdast::Node::Text(text) => Some(text.value),
+
         mdast::Node::Heading(heading) => {
             let level = heading.depth;
             let mut result = String::from("\n");
             match level {
-                1 => result.push_str(&join_children_with(|s| s.bold().red().to_string(), heading.children)),
-                2 => result.push_str(&join_children_with(|s| s.bold().yellow().to_string(), heading.children)),
-                3 => result.push_str(&join_children_with(|s| s.bold().green().to_string(), heading.children)),
-                4 => result.push_str(&join_children_with(|s| s.bold().cyan().to_string(), heading.children)),
-                5 => result.push_str(&join_children_with(|s| s.bold().blue().to_string(), heading.children)),
-                6 => result.push_str(&join_children_with(|s| s.bold().purple().to_string(), heading.children)),
+                1 => result.push_str(&join_children_with(
+                    |s| s.bold().red().to_string(),
+                    heading.children,
+                )),
+                2 => result.push_str(&join_children_with(
+                    |s| s.bold().yellow().to_string(),
+                    heading.children,
+                )),
+                3 => result.push_str(&join_children_with(
+                    |s| s.bold().green().to_string(),
+                    heading.children,
+                )),
+                4 => result.push_str(&join_children_with(
+                    |s| s.bold().cyan().to_string(),
+                    heading.children,
+                )),
+                5 => result.push_str(&join_children_with(
+                    |s| s.bold().blue().to_string(),
+                    heading.children,
+                )),
+                6 => result.push_str(&join_children_with(
+                    |s| s.bold().purple().to_string(),
+                    heading.children,
+                )),
                 _ => result.push_str(&join_children(heading.children)),
             }
             result.push('\n');
@@ -75,7 +94,7 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
             result.push_str("\n```\n".replace("```", "").as_str());
             Some(result)
         }
-        
+
         mdast::Node::Emphasis(emphasis) => Some(join_children_with(
             |s| s.italic().to_string(),
             emphasis.children,
@@ -95,54 +114,53 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
             Some(result)
         }
 
-        mdast::Node::ThematicBreak(_) => {
-            Some("\n---\n".to_string())
-        }
+        mdast::Node::ThematicBreak(_) => Some("\n---\n".to_string()),
 
         mdast::Node::BlockQuote(blockquote) => {
             let mut result = String::from(">").replace(">", "");
-            result.push_str(&join_children(blockquote.children).on_white().black().to_string());
+            result.push_str(
+                &join_children(blockquote.children)
+                    .on_white()
+                    .black()
+                    .to_string(),
+            );
             result.push('\n');
-        
+
             Some(result)
         }
-         
+
         mdast::Node::List(list) => {
+            let mut result = String::new();
+            let mut item_number = list.start.unwrap_or(1);
+            result.push_str("\n");
 
-        let mut result = String::new();
-        let mut item_number = list.start.unwrap_or(1);
-        result.push_str("\n");
+            for item in list.children {
+                let mut item_text = String::new();
+                if list.ordered {
+                    item_text.push_str(&format!(" {}. ", item_number).bright_green().to_string());
+                } else {
+                    item_text.push_str(&format!(" • ").bright_green().to_string());
+                }
 
-        for item in list.children {
-            let mut item_text = String::new();
-            if list.ordered {
-            item_text.push_str(&format!(" {}. ", item_number).bright_green().to_string());
-            } else {
-                item_text.push_str(&format!(" • ").bright_green().to_string());
-            }
-
-            if let mdast::Node::ListItem(list_item) = item {
-                for child in list_item.children {
-                    
-                    if let mdast::Node::Paragraph(paragraph) = child {
-                        item_text.push_str(&join_children(paragraph.children));
-                    }
-                    else {
-                        item_text.push_str(&join_children(vec![child]));
+                if let mdast::Node::ListItem(list_item) = item {
+                    for child in list_item.children {
+                        if let mdast::Node::Paragraph(paragraph) = child {
+                            item_text.push_str(&join_children(paragraph.children));
+                        } else {
+                            item_text.push_str(&join_children(vec![child]));
+                        }
                     }
                 }
+
+                item_text.push('\n');
+                result.push_str(&item_text);
+                item_number += 1;
             }
 
-            item_text.push('\n');
-            result.push_str(&item_text);
-            item_number += 1;
+            result.push('\n');
+
+            Some(result)
         }
-
-        result.push('\n');
-
-        Some(result)
-    }
-
 
         _ => None,
     }
@@ -168,23 +186,25 @@ pub fn prettify(md_text: &str) -> Result<String, String> {
             while let Some(line) = lines.next() {
                 if line == "---" {
                     break;
-                }
-                else{
+                } else {
                     front_matter.push(line.to_string());
                 }
             }
-            first_line = lines.next(); 
+            first_line = lines.next();
         }
     }
 
     let md_text = if let Some(line) = first_line {
         // If there are lines left, join them and add a newline at the end
-        std::iter::once(line).chain(lines).collect::<Vec<&str>>().join("\n") + "\n"
+        std::iter::once(line)
+            .chain(lines)
+            .collect::<Vec<&str>>()
+            .join("\n")
+            + "\n"
     } else {
         // If there are no lines left, return an empty string
         String::new()
     };
-
 
     let parsed = markdown::to_mdast(&md_text, &markdown::ParseOptions::default());
     let mut prettified = String::new();

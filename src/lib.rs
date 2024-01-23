@@ -8,7 +8,7 @@ use std::fs;
 
 use std::io::{stdin, stdout, Result, Write};
 use std::process::exit;
-use termion::cursor::{Down, Up};
+// use termion::cursor::{Down, Up};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
@@ -16,10 +16,10 @@ use termion::raw::IntoRawMode;
 enum NavigationAction {
     Next,
     Previous,
-    ScrollUp,
-    ScrollDown,
     Exit,
     None,
+    // ScrollUp,
+    // ScrollDown,
 }
 
 pub struct Project {
@@ -87,8 +87,8 @@ impl Project {
                     return Ok(NavigationAction::Previous)
                 }
                 Key::Char('q') | Key::Char('Q') => return Ok(NavigationAction::Exit),
-                Key::Up => return Ok(NavigationAction::ScrollUp),
-                Key::Down => return Ok(NavigationAction::ScrollDown),
+                // Key::Up => return Ok(NavigationAction::ScrollUp),
+                // Key::Down => return Ok(NavigationAction::ScrollDown),
                 _ => continue,
             }
         }
@@ -156,14 +156,14 @@ impl Project {
                         current_slide -= 1;
                     }
                 }
-                NavigationAction::ScrollUp => {
-                    write!(stdout(), "{}", Up(1)).unwrap();
-                    stdout().flush().unwrap();
-                }
-                NavigationAction::ScrollDown => {
-                    write!(stdout(), "{}", Down(1)).unwrap();
-                    stdout().flush().unwrap();
-                }
+                // NavigationAction::ScrollUp => {
+                //     write!(stdout(), "{}", Up(1)).unwrap();
+                //     stdout().flush().unwrap();
+                // }
+                // NavigationAction::ScrollDown => {
+                //     write!(stdout(), "{}", Down(1)).unwrap();
+                //     stdout().flush().unwrap();
+                // }
                 NavigationAction::Exit => {
                     exit(0);
                 }
