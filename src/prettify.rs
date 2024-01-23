@@ -100,18 +100,13 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
         }
 
         mdast::Node::BlockQuote(blockquote) => {
-            let mut result = String::from(">").replace(">", "\n");
-            
-            result.push_str("   >");
-            result.push_str(&join_children(blockquote.children).replace("\n", &format!("{}", color::Fg(color::LightBlack))));
-
-        
-            result.push_str(&format!("{}", color::Fg(color::Reset)));
+            let mut result = String::from(">").replace(">", "");
+            result.push_str(&join_children(blockquote.children).on_white().black().to_string());
             result.push('\n');
         
             Some(result)
-        }       
-
+        }
+         
         mdast::Node::List(list) => {
 
         let mut result = String::new();
