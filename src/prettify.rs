@@ -5,12 +5,11 @@ use std::sync::Mutex;
 
 use colored::*;
 use markdown::mdast::{self};
-// use termion::color;
 use regex::Regex;
-// use termion::style;
 
 
 use lazy_static::lazy_static;
+use termion::style;
 
 lazy_static! {
     static ref STYLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
@@ -33,7 +32,16 @@ fn join_children(children: Vec<mdast::Node>) -> String {
 
 // Recursively visit the mdast tree and return a string
 fn visit_md_node(node: mdast::Node) -> Option<String> {
+
+    let style_map = STYLES.lock().unwrap();
+
+    let styles = style_map.clone();
+
+    drop(style_map);
+
+
     match node {
+        
         mdast::Node::Root(root) => {
             let mut result = String::default();
             result.push_str(&join_children(root.children));
@@ -143,6 +151,17 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
         }
 
         mdast::Node::List(list) => {
+
+            let bullet_color: &str = match list.ordered {
+                true => styles.get("ordered_list_bullet").map(|s| s.as_str()).unwrap_or("green"),
+                false => styles.get("unordered_list_bullet").map(|s| s.as_str()).unwrap_or("green"),
+            };
+
+            let text_color: &str = match list.ordered {
+                true => styles.get("ordered_list").map(|s| s.as_str()).unwrap_or("blue"),
+                false => styles.get("unordered_list").map(|s| s.as_str()).unwrap_or("blue"),
+            };
+            
             let mut result = String::new();
             let mut item_number = list.start.unwrap_or(1);
             result.push_str("\n");
@@ -150,9 +169,9 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
             for item in list.children {
                 let mut item_text = String::new();
                 if list.ordered {
-                    item_text.push_str(&format!(" {}. ", item_number).bright_green().to_string());
+                    item_text.push_str(&format!(" {}. ", item_number).color(bullet_color).to_string());
                 } else {
-                    item_text.push_str(&format!(" • ").bright_green().to_string());
+                    item_text.push_str(&format!(" • ").color(bullet_color).to_string());
                 }
 
                 if let mdast::Node::ListItem(list_item) = item {
@@ -166,7 +185,7 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                 }
 
                 item_text.push('\n');
-                result.push_str(&item_text);
+                result.push_str(&item_text.color(text_color).to_string());
                 item_number += 1;
             }
 
@@ -192,8 +211,8 @@ pub fn prettify(md_text: &str, style_map: HashMap< String, String>) -> Result<St
 
     let mut global_styles = STYLES.lock().unwrap();
     *global_styles = style_map;
+    drop(global_styles);
 
-    print!("{:?}", global_styles);
 
     let mut lines = md_text.lines();
     let mut front_matter = Vec::new();
