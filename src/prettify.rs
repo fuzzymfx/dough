@@ -1,7 +1,20 @@
+extern crate lazy_static;
+
+use std::collections::HashMap;
+use std::sync::Mutex;
+
 use colored::*;
 use markdown::mdast::{self};
 // use termion::color;
 use regex::Regex;
+// use termion::style;
+
+
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref STYLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+}
 
 fn join_children_with(join_fn: fn(String) -> String, children: Vec<mdast::Node>) -> String {
     let mut result = String::default();
@@ -175,7 +188,13 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
 //     }
 // }
 
-pub fn prettify(md_text: &str) -> Result<String, String> {
+pub fn prettify(md_text: &str, style_map: HashMap< String, String>) -> Result<String, String> {
+
+    let mut global_styles = STYLES.lock().unwrap();
+    *global_styles = style_map;
+
+    print!("{:?}", global_styles);
+
     let mut lines = md_text.lines();
     let mut front_matter = Vec::new();
 

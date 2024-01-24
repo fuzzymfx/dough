@@ -5,6 +5,7 @@ extern crate termion;
 use std::error::Error;
 use std::fmt;
 use std::fs;
+use paris::Logger;
 
 use std::io::{stdin, stdout, Result, Write};
 use std::process::exit;
@@ -12,6 +13,7 @@ use std::process::exit;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
+use std::collections::HashMap;
 
 enum NavigationAction {
     Next,
@@ -63,18 +65,46 @@ impl Project {
     }
 
     pub fn init_project(self: &Self) -> Result<()> {
+        let mut log = Logger::new();
+        
         let create_dir_result = fs::create_dir(&self.fs_path);
         if create_dir_result.is_err() {
             return create_dir_result;
         }
 
-        let md_path = self.fs_path.join("1.md");
-        let md_content = fs::read_to_string(self.template.join("template.md"))?;
-        return fs::write(md_path, md_content);
+        if!self.template.exists(){
+            return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Template not found"));
+        }
+        else if !self.template.is_dir(){
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Template is not a directory"));
+        }
+
+        else if !self.template.join("style.yml").exists() {
+            log.warn("Template does not contain a style.yml file, using default style");
+
+            fs::copy(
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("templates").join("default").join("style.yml"),
+                self.template.join("style.yml")
+            )?;
+        }
+
+        fs::copy(self.template.join("style.yml"), self.fs_path.join("style.yml"))?;
+        
+        for i in 1u64.. {
+            let file_path = self.template.join(i.to_string() + ".md");
+            if !file_path.exists() {
+                break;
+            }
+            let output_path = self.fs_path.join(i.to_string() + ".md");
+            fs::copy(file_path, output_path)?;
+        }
+
+        return Ok(());
+
     }
 
-    fn render_term(file_contents: &str) -> std::result::Result<NavigationAction, Box<dyn Error>> {
-        let slide = prettify::prettify(file_contents)?;
+    fn render_term(file_contents: &str, style_map: HashMap<String, String>) -> std::result::Result<NavigationAction, Box<dyn Error>> {
+        let slide = prettify::prettify(file_contents, style_map)?;
         print!("{}", slide);
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode()?;
@@ -147,7 +177,15 @@ impl Project {
             }
 
             let contents = fs::read_to_string(&file_path)?;
-            match Self::render_term(&contents)? {
+            let style_content = fs::read_to_string(self.fs_path.join("style.yml"))?;
+            let style_map: HashMap<String, String> = style_content
+                .lines()
+                .filter_map(|line| {
+                    let mut parts = line.splitn(2, ':');
+                    Some((parts.next()?.trim().to_string(), parts.next()?.trim().to_string()))
+                })
+                .collect();
+            match Self::render_term(&contents, style_map)? {
                 NavigationAction::Next => {
                     current_slide += 1;
                 }
