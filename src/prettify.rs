@@ -77,32 +77,46 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
 
         mdast::Node::Heading(heading) => {
             let level = heading.depth;
-            let mut result = String::from("\n");
+            let mut result = String::from("\n");            
+
+            let color: &str ;
+            let mut item_text = String::new();
+
             match level {
-                1 => result.push_str(&join_children_with(
-                    |s| s.bold().red().to_string(),
-                    heading.children,
-                )),
-                2 => result.push_str(&join_children_with(
-                    |s| s.bold().yellow().to_string(),
-                    heading.children,
-                )),
-                3 => result.push_str(&join_children_with(
-                    |s| s.bold().green().to_string(),
-                    heading.children,
-                )),
-                4 => result.push_str(&join_children_with(
-                    |s| s.bold().cyan().to_string(),
-                    heading.children,
-                )),
-                5 => result.push_str(&join_children_with(
-                    |s| s.bold().blue().to_string(),
-                    heading.children,
-                )),
-                6 => result.push_str(&join_children_with(
-                    |s| s.bold().purple().to_string(),
-                    heading.children,
-                )),
+                1 =>{
+                    color = styles.get("h1").map(|s| s.as_str()).unwrap_or("red");
+                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    result.push_str(&item_text);
+
+                },
+                2 =>{
+                    color = styles.get("h2").map(|s| s.as_str()).unwrap_or("yellow");
+                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    result.push_str(&item_text);
+                },
+                3 =>{
+                    color = styles.get("h3").map(|s| s.as_str()).unwrap_or("green");
+                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    result.push_str(&item_text);
+                },
+                4 =>{
+                    color = styles.get("h4").map(|s| s.as_str()).unwrap_or("blue");
+                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    result.push_str(&item_text);
+                },
+                5 =>
+                {
+                    color = styles.get("h5").map(|s| s.as_str()).unwrap_or("magenta");
+                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    result.push_str(&item_text);
+                },
+
+                6 =>
+                {
+                    color = styles.get("h6").map(|s| s.as_str()).unwrap_or("cyan");
+                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    result.push_str(&item_text);
+                },
                 _ => result.push_str(&join_children(heading.children)),
             }
             result.push('\n');
@@ -110,8 +124,9 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
         }
 
         mdast::Node::Code(code) => {
+            let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
             let mut result = String::from("```\n").replace("```", "");
-            result.push_str(&code.value.on_black().white().to_string());
+            result.push_str(&code.value.on_black().color(color).to_string());
             result.push_str("\n```\n".replace("```", "").as_str());
             Some(result)
         }
