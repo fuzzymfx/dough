@@ -10,13 +10,15 @@ fn main() {
     let matches = App::new("dough")
         .version("0.0.2")
         .author("fuzzymfx, injuly")
-        .about("
+        .about(
+            "
         ~~~~~~
         |     |
         |     | : A command-line tool to create presentations from Markdown files
         |     |
         ~~~~~~
-        ")
+        ",
+        )
         .subcommand(
             SubCommand::with_name("new")
                 .about("Create a new project")
@@ -48,20 +50,18 @@ fn main() {
         create_project(args, &mut log);
     } else if let Some(args) = matches.subcommand_matches("present") {
         present_project(args, &mut log);
-    }
-    else{
-        print!("
+    } else {
+        print!(
+            "
         ~~~~~~
         |     |
         |     | : A command-line tool to create presentations from Markdown files
         |     |
         ~~~~~~
-        ");
-        
-        App::new("dough")
-        .print_help()
-        .unwrap();
+        "
+        );
 
+        App::new("dough").print_help().unwrap();
     }
 }
 

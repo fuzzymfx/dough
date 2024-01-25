@@ -7,7 +7,6 @@ use colored::*;
 use markdown::mdast::{self};
 use regex::Regex;
 
-
 use lazy_static::lazy_static;
 use termion::style;
 
@@ -32,16 +31,13 @@ fn join_children(children: Vec<mdast::Node>) -> String {
 
 // Recursively visit the mdast tree and return a string
 fn visit_md_node(node: mdast::Node) -> Option<String> {
-
     let style_map = STYLES.lock().unwrap();
 
     let styles = style_map.clone();
 
     drop(style_map);
 
-
     match node {
-        
         mdast::Node::Root(root) => {
             let mut result = String::default();
             result.push_str(&join_children(root.children));
@@ -77,46 +73,67 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
 
         mdast::Node::Heading(heading) => {
             let level = heading.depth;
-            let mut result = String::from("\n");            
+            let mut result = String::from("\n");
 
-            let color: &str ;
+            let color: &str;
             let mut item_text = String::new();
 
             match level {
-                1 =>{
+                1 => {
                     color = styles.get("h1").map(|s| s.as_str()).unwrap_or("red");
-                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    item_text.push_str(
+                        &format!("{}", join_children(heading.children))
+                            .color(color)
+                            .to_string(),
+                    );
                     result.push_str(&item_text);
-
-                },
-                2 =>{
+                }
+                2 => {
                     color = styles.get("h2").map(|s| s.as_str()).unwrap_or("yellow");
-                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    item_text.push_str(
+                        &format!("{}", join_children(heading.children))
+                            .color(color)
+                            .to_string(),
+                    );
                     result.push_str(&item_text);
-                },
-                3 =>{
+                }
+                3 => {
                     color = styles.get("h3").map(|s| s.as_str()).unwrap_or("green");
-                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    item_text.push_str(
+                        &format!("{}", join_children(heading.children))
+                            .color(color)
+                            .to_string(),
+                    );
                     result.push_str(&item_text);
-                },
-                4 =>{
+                }
+                4 => {
                     color = styles.get("h4").map(|s| s.as_str()).unwrap_or("blue");
-                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    item_text.push_str(
+                        &format!("{}", join_children(heading.children))
+                            .color(color)
+                            .to_string(),
+                    );
                     result.push_str(&item_text);
-                },
-                5 =>
-                {
+                }
+                5 => {
                     color = styles.get("h5").map(|s| s.as_str()).unwrap_or("magenta");
-                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    item_text.push_str(
+                        &format!("{}", join_children(heading.children))
+                            .color(color)
+                            .to_string(),
+                    );
                     result.push_str(&item_text);
-                },
+                }
 
-                6 =>
-                {
+                6 => {
                     color = styles.get("h6").map(|s| s.as_str()).unwrap_or("cyan");
-                    item_text.push_str(&format!("{}", join_children(heading.children)).color(color).to_string());
+                    item_text.push_str(
+                        &format!("{}", join_children(heading.children))
+                            .color(color)
+                            .to_string(),
+                    );
                     result.push_str(&item_text);
-                },
+                }
                 _ => result.push_str(&join_children(heading.children)),
             }
             result.push('\n');
@@ -166,17 +183,28 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
         }
 
         mdast::Node::List(list) => {
-
             let bullet_color: &str = match list.ordered {
-                true => styles.get("ordered_list_bullet").map(|s| s.as_str()).unwrap_or("green"),
-                false => styles.get("unordered_list_bullet").map(|s| s.as_str()).unwrap_or("green"),
+                true => styles
+                    .get("ordered_list_bullet")
+                    .map(|s| s.as_str())
+                    .unwrap_or("green"),
+                false => styles
+                    .get("unordered_list_bullet")
+                    .map(|s| s.as_str())
+                    .unwrap_or("green"),
             };
 
             let text_color: &str = match list.ordered {
-                true => styles.get("ordered_list").map(|s| s.as_str()).unwrap_or("blue"),
-                false => styles.get("unordered_list").map(|s| s.as_str()).unwrap_or("blue"),
+                true => styles
+                    .get("ordered_list")
+                    .map(|s| s.as_str())
+                    .unwrap_or("blue"),
+                false => styles
+                    .get("unordered_list")
+                    .map(|s| s.as_str())
+                    .unwrap_or("blue"),
             };
-            
+
             let mut result = String::new();
             let mut item_number = list.start.unwrap_or(1);
             result.push_str("\n");
@@ -184,7 +212,11 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
             for item in list.children {
                 let mut item_text = String::new();
                 if list.ordered {
-                    item_text.push_str(&format!(" {}. ", item_number).color(bullet_color).to_string());
+                    item_text.push_str(
+                        &format!(" {}. ", item_number)
+                            .color(bullet_color)
+                            .to_string(),
+                    );
                 } else {
                     item_text.push_str(&format!(" • ").color(bullet_color).to_string());
                 }
@@ -222,12 +254,11 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
 //     }
 // }
 
-pub fn prettify(md_text: &str, style_map: HashMap< String, String>) -> Result<String, String> {
-
+pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<String, String> {
+    let map = style_map.clone();
     let mut global_styles = STYLES.lock().unwrap();
-    *global_styles = style_map;
+    *global_styles = map;
     drop(global_styles);
-
 
     let mut lines = md_text.lines();
     let mut front_matter = Vec::new();
