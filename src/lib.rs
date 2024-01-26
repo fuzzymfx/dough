@@ -187,7 +187,8 @@ impl Project {
                 }
                 //add escape and ctrl + c here
                 
-                Key::Char('q') | Key::Char('Q') => return Ok((NavigationAction::Exit, lines_value)), 
+                Key::Char('q') | Key::Char('Q') => return Ok((NavigationAction::Exit, lines_value)),
+                Key::Esc | Key::Ctrl('c') => return Ok((NavigationAction::Exit, lines_value)),
                 Key::Up => return Ok((NavigationAction::ScrollUp, lines_value)),
                 Key::Down => return Ok((NavigationAction::ScrollDown, lines_value)),
                 _ => continue,
