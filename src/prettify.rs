@@ -261,22 +261,22 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
     drop(global_styles);
 
     let mut lines = md_text.lines();
-    let mut front_matter = Vec::new();
+    // let mut front_matter = Vec::new();
 
     let mut first_line = lines.next();
 
-    if let Some(line) = first_line {
-        if line == "---" {
-            while let Some(line) = lines.next() {
-                if line == "---" {
-                    break;
-                } else {
-                    front_matter.push(line.to_string());
-                }
-            }
-            first_line = lines.next();
-        }
-    }
+    // if let Some(line) = first_line {
+    //     if line == "---" {
+    //         while let Some(line) = lines.next() {
+    //             if line == "---" {
+    //                 break;
+    //             } else {
+    //                 front_matter.push(line.to_string());
+    //             }
+    //         }
+    //         first_line = lines.next();
+    //     }
+    // }
 
     let md_text = if let Some(line) = first_line {
         // If there are lines left, join them and add a newline at the end
@@ -302,5 +302,35 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
             }
         }
     }
+    // Add the required number of blank lines
+    let mut blank_lines = 0;
+    let (_width, height) = termion::terminal_size().unwrap();
+
+    if style_map.get("vertical_alignment").unwrap() == "false" {
+        blank_lines = 0;
+    } else {
+        if height > prettified.lines().count() as u16 {
+            blank_lines = (height - prettified.lines().count() as u16) as u32 / 2;
+        } else {
+            blank_lines = 0;
+        }
+    }
+    if let Some(terminal_style) = style_map.get("terminal") {
+        if terminal_style == "warp" {
+            // In case of "warp", add blank lines at the end
+            for _ in 0..blank_lines - 2 {
+                prettified.push('\n');
+            }
+        } else {
+            // In all other cases, add blank lines at the beginning
+            let mut new_prettified = String::new();
+            for _ in 0..blank_lines - 2 {
+                new_prettified.push('\n');
+            }
+            new_prettified.push_str(&prettified);
+            prettified = new_prettified;
+        }
+    }
+
     return Ok(prettified);
 }

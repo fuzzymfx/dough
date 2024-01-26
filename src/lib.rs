@@ -7,6 +7,7 @@ use std::fmt;
 use std::fs;
 
 use std::collections::HashMap;
+use std::fs::FileTimes;
 use std::io::{stdin, stdout, Result, Write};
 use std::process::exit;
 use termion::event::Key;
@@ -129,7 +130,7 @@ impl Project {
         render: bool,
         lines: &u32,
     ) -> std::result::Result<(NavigationAction, u32), Box<dyn Error>> {
-        // let (width, height) = termion::terminal_size()?;
+        let (_width, height) = termion::terminal_size()?;
 
         // TODO: ADD FEATURE TO RENDER A FRAME OVER THE RENDERING AREA
 
@@ -142,17 +143,38 @@ impl Project {
         if style_map.get("clear").unwrap() == "true" {
             clear = true;
         }
+        let mut blank_lines: u32 = 0;
 
         let slide = prettify::prettify(file_contents, &style_map)?;
 
+        if style_map.get("vertical_alignment").unwrap() == "false" {
+            blank_lines = 0;
+        } else {
+            if height > slide.lines().count() as u16 {
+                if (height - slide.lines().count() as u16) as u32 / 2 > 0 {
+                    blank_lines = ((height - slide.lines().count() as u16) - 2) as u32;
+                } else {
+                    blank_lines = (height - slide.lines().count() as u16 - 2) as u32;
+                }
+            } else {
+                blank_lines = 0;
+            }
+        }
+
         let mut lines_value = *lines;
 
-        if (slide.lines().count() as u32) < lines_value {
-            //DEBUG
-            // print!("\n{}\n", lines_value.to_string());
-            // print!("{}\n", slide.lines().count() as u32);
-
-            lines_value = slide.lines().count() as u32;
+        if let Some(terminal_style) = style_map.get("terminal") {
+            if terminal_style == "warp" {
+                if (slide.lines().count() as u32) < lines_value {
+                    lines_value = slide.lines().count() as u32;
+                } else if lines_value < blank_lines - 2 {
+                    lines_value = blank_lines - 2;
+                }
+            } else {
+                if (slide.lines().count() as u32) < lines_value {
+                    lines_value = slide.lines().count() as u32;
+                }
+            }
         }
 
         if render {
@@ -160,18 +182,17 @@ impl Project {
                 lines_value = slide.lines().count() as u32;
                 print!("{}", Self::remove_last_n_lines(&slide, lines_value));
             } else {
-                lines_value = 0;
                 print!("{}", slide);
             }
         } else {
             print!("{}", Self::remove_last_n_lines(&slide, lines_value));
         }
+
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode()?;
         if render {
             stdout.flush()?;
         }
-
         for c in stdin.keys() {
             match c? {
                 Key::Right | Key::Char('l') | Key::Char('L') => {
@@ -208,7 +229,7 @@ impl Project {
 
         loop {
             Self::clear();
-            print!("{}", termion::cursor::Hide);
+            // print!("{}", termion::cursor::Hide);
             let file_path = self.fs_path.join(format!("{}.md", current_slide));
 
             if !file_path.exists() {
@@ -220,6 +241,7 @@ impl Project {
                     exit(0)
                 }
             }
+
             let contents = fs::read_to_string(&file_path)?;
             let style_content = fs::read_to_string(self.fs_path.join("style.yml"))?;
             let style_map: HashMap<String, String> = style_content
