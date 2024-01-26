@@ -110,7 +110,6 @@ impl Project {
     }
 
     fn remove_last_n_lines(text: &str, n: u32) -> String {
-
         let mut lines: Vec<&str> = text.lines().collect();
 
         // Check if there is at least one line
@@ -129,9 +128,7 @@ impl Project {
         style_map: &HashMap<String, String>,
         render: bool,
         lines: &u32,
-
-    ) ->std::result::Result<(NavigationAction, u32), Box<dyn Error>>  {
-
+    ) -> std::result::Result<(NavigationAction, u32), Box<dyn Error>> {
         // let (width, height) = termion::terminal_size()?;
 
         // TODO: ADD FEATURE TO RENDER A FRAME OVER THE RENDERING AREA
@@ -147,27 +144,23 @@ impl Project {
         }
 
         let slide = prettify::prettify(file_contents, &style_map)?;
-        
+
         let mut lines_value = *lines;
 
         if (slide.lines().count() as u32) < lines_value {
-
             //DEBUG
             // print!("\n{}\n", lines_value.to_string());
             // print!("{}\n", slide.lines().count() as u32);
 
             lines_value = slide.lines().count() as u32;
         }
-        
+
         if render {
             if clear {
                 lines_value = slide.lines().count() as u32;
-                print!(
-                    "{}",
-                    Self::remove_last_n_lines(&slide, lines_value)
-                );
+                print!("{}", Self::remove_last_n_lines(&slide, lines_value));
             } else {
-                lines_value =0;
+                lines_value = 0;
                 print!("{}", slide);
             }
         } else {
@@ -181,13 +174,16 @@ impl Project {
 
         for c in stdin.keys() {
             match c? {
-                Key::Right | Key::Char('l') | Key::Char('L') => return Ok((NavigationAction::Next, lines_value)),
+                Key::Right | Key::Char('l') | Key::Char('L') => {
+                    return Ok((NavigationAction::Next, lines_value))
+                }
                 Key::Left | Key::Char('h') | Key::Char('H') => {
                     return Ok((NavigationAction::Previous, lines_value));
                 }
                 //add escape and ctrl + c here
-                
-                Key::Char('q') | Key::Char('Q') => return Ok((NavigationAction::Exit, lines_value)),
+                Key::Char('q') | Key::Char('Q') => {
+                    return Ok((NavigationAction::Exit, lines_value))
+                }
                 Key::Esc | Key::Ctrl('c') => return Ok((NavigationAction::Exit, lines_value)),
                 Key::Up => return Ok((NavigationAction::ScrollUp, lines_value)),
                 Key::Down => return Ok((NavigationAction::ScrollDown, lines_value)),
@@ -198,7 +194,6 @@ impl Project {
         drop(stdout);
 
         return Ok((NavigationAction::None, lines_value));
-
     }
 
     fn clear() {
@@ -210,7 +205,6 @@ impl Project {
         let mut render = true;
         let mut current_slide = 1;
         let mut lines: u32 = 0;
-
 
         loop {
             Self::clear();
@@ -263,11 +257,9 @@ impl Project {
                     }
                 }
                 (NavigationAction::Exit, _new_lines_value) => {
-                    
                     exit(0);
                 }
-                (NavigationAction::None, _new_lines_value) => {
-                }
+                (NavigationAction::None, _new_lines_value) => {}
             }
         }
     }
