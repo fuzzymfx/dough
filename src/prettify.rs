@@ -324,11 +324,13 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
         } else {
             // In all other cases, add blank lines at the beginning
             let mut new_prettified = String::new();
-            for _ in 0..blank_lines - 2 {
-                new_prettified.push('\n');
+            if blank_lines > 2 {
+                for _ in 0..blank_lines - 2 {
+                    new_prettified.push('\n');
+                }
+                new_prettified.push_str(&prettified);
+                prettified = new_prettified;
             }
-            new_prettified.push_str(&prettified);
-            prettified = new_prettified;
         }
     }
 
