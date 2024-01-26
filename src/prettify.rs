@@ -8,7 +8,7 @@ use markdown::mdast::{self};
 use regex::Regex;
 
 use lazy_static::lazy_static;
-use termion::style;
+// use termion::style;
 
 lazy_static! {
     static ref STYLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());

@@ -110,8 +110,6 @@ impl Project {
     }
 
     fn remove_last_n_lines(text: &str, n: u32) -> String {
-        // TODO: FIX BUG HERE: IMPROVE THIS
-        // parse the text into better map/ tree to avoid inconsistencies in calculating the number of lines
 
         let mut lines: Vec<&str> = text.lines().collect();
 
@@ -130,9 +128,11 @@ impl Project {
         file_contents: &str,
         style_map: &HashMap<String, String>,
         render: bool,
-        lines: u32,
-    ) -> std::result::Result<NavigationAction, Box<dyn Error>> {
-        let (width, height) = termion::terminal_size()?;
+        lines: &u32,
+
+    ) ->std::result::Result<(NavigationAction, u32), Box<dyn Error>>  {
+
+        // let (width, height) = termion::terminal_size()?;
 
         // TODO: ADD FEATURE TO RENDER A FRAME OVER THE RENDERING AREA
 
@@ -147,17 +147,31 @@ impl Project {
         }
 
         let slide = prettify::prettify(file_contents, &style_map)?;
+        
+        let mut lines_value = *lines;
+
+        if (slide.lines().count() as u32) < lines_value {
+
+            //DEBUG
+            // print!("\n{}\n", lines_value.to_string());
+            // print!("{}\n", slide.lines().count() as u32);
+
+            lines_value = slide.lines().count() as u32;
+        }
+        
         if render {
             if clear {
+                lines_value = slide.lines().count() as u32;
                 print!(
                     "{}",
-                    Self::remove_last_n_lines(&slide, slide.lines().count() as u32 - 1)
+                    Self::remove_last_n_lines(&slide, lines_value)
                 );
             } else {
+                lines_value =0;
                 print!("{}", slide);
             }
         } else {
-            print!("{}", Self::remove_last_n_lines(&slide, lines));
+            print!("{}", Self::remove_last_n_lines(&slide, lines_value));
         }
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode()?;
@@ -167,20 +181,23 @@ impl Project {
 
         for c in stdin.keys() {
             match c? {
-                Key::Right | Key::Char('l') | Key::Char('L') => return Ok(NavigationAction::Next),
+                Key::Right | Key::Char('l') | Key::Char('L') => return Ok((NavigationAction::Next, lines_value)),
                 Key::Left | Key::Char('h') | Key::Char('H') => {
-                    return Ok(NavigationAction::Previous)
+                    return Ok((NavigationAction::Previous, lines_value));
                 }
-                Key::Char('q') | Key::Char('Q') => return Ok(NavigationAction::Exit),
-                Key::Up => return Ok(NavigationAction::ScrollUp),
-                Key::Down => return Ok(NavigationAction::ScrollDown),
+                //add escape and ctrl + c here
+                
+                Key::Char('q') | Key::Char('Q') => return Ok((NavigationAction::Exit, lines_value)), 
+                Key::Up => return Ok((NavigationAction::ScrollUp, lines_value)),
+                Key::Down => return Ok((NavigationAction::ScrollDown, lines_value)),
                 _ => continue,
             }
         }
 
         drop(stdout);
 
-        Ok(NavigationAction::None)
+        return Ok((NavigationAction::None, lines_value));
+
     }
 
     fn clear() {
@@ -192,6 +209,7 @@ impl Project {
         let mut render = true;
         let mut current_slide = 1;
         let mut lines: u32 = 0;
+
 
         loop {
             Self::clear();
@@ -220,42 +238,35 @@ impl Project {
                 })
                 .collect();
 
-            if render == true {
-                if style_map.get("clear").unwrap() == "true" {
-                    lines = contents.lines().count() as u32 - 1;
-                } else {
-                    lines = 0;
-                }
-            }
-            print!("p{}\n", lines);
-
-            match Self::render_term(&contents, &style_map, render, lines)? {
-                NavigationAction::Next => {
+            match Self::render_term(&contents, &style_map, render, &lines)? {
+                (NavigationAction::Next, _new_lines_value) => {
                     render = true;
                     current_slide += 1;
                 }
-                NavigationAction::Previous => {
+                (NavigationAction::Previous, _new_lines_value) => {
                     render = true;
                     if current_slide > 1 {
                         current_slide -= 1;
                     }
                 }
-                NavigationAction::ScrollUp => {
+                (NavigationAction::ScrollUp, new_lines_value) => {
                     render = false;
-                    if lines < contents.lines().count() as u32 - 1 {
-                        lines += 1;
-                    }
+                    lines = new_lines_value;
+                    lines += 1;
                 }
-                NavigationAction::ScrollDown => {
+                (NavigationAction::ScrollDown, new_lines_value) => {
                     render = false;
+                    lines = new_lines_value;
                     if lines > 0 {
                         lines -= 1;
                     }
                 }
-                NavigationAction::Exit => {
+                (NavigationAction::Exit, _new_lines_value) => {
+                    
                     exit(0);
                 }
-                NavigationAction::None => {}
+                (NavigationAction::None, _new_lines_value) => {
+                }
             }
         }
     }
