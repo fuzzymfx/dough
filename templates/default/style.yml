@@ -1,0 +1,31 @@
+# This file contains the default style settings for the terminal markdown renderer.
+
+# Markdown styles
+h1: red
+h2: yellow
+h3: green
+h4: cyan
+h5: blue
+h6: purple
+code: black on white
+blockquote: black on white
+ordered_list_bullet: yellow
+unordered_list_bullet: yellow
+ordered_list: white
+unordered_list: white
+link_text: bright_green
+link_url: bright_cyan
+thematic_break: white on black
+
+# Terminal styles
+# clear will clear the terminal before rendering, you would need to scroll down to render each line
+clear: false
+
+# vertical_alignment will vertically align the text to the middle of the terminal
+vertical_alignment: true
+
+# terminals vary in rendering. Currently, the following terminals are supported:
+#   - warp
+#   - default Mac OS terminal
+
+terminal: default
