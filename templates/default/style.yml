@@ -24,8 +24,11 @@ clear: false
 # vertical_alignment will vertically align the text to the middle of the terminal
 vertical_alignment: true
 
+# horizontal_alignment will horizontally align the text to the middle of the terminal
+horizontal_alignment: true
+
 # terminals vary in rendering. Currently, the following terminals are supported:
 #   - warp
 #   - default Mac OS terminal
 
-terminal: default
+terminal: warp

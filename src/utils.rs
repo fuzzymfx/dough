@@ -5,8 +5,6 @@ pub fn calculate_length_of_longest_line(prettified: String) -> usize {
     let mut longest_line = 0;
 
     for line in prettified.lines() {
-        print!("{:?}\n", line);
-        print!("{:?}\n", line.len());
         if line.len() > longest_line {
             longest_line = line.len();
         }
