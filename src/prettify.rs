@@ -1,4 +1,5 @@
 extern crate lazy_static;
+use crate::utils::{calculate_length_of_longest_line, store_colors};
 
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -245,66 +246,12 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
     }
 }
 
-// pub fn parse_front_matter(front_matter: &[String]) {
-//     for child in front_matter.iter() {
-//         let mut result = String::new();
-//         result.push_str(&child);
-//         result.push('\n');
-//         println!("{}", result);
-//     }
-// }
-
-pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<String, String> {
-    let map = style_map.clone();
-    let mut global_styles = STYLES.lock().unwrap();
-    *global_styles = map;
-    drop(global_styles);
-
-    let mut lines = md_text.lines();
-    // let mut front_matter = Vec::new();
-
-    let mut first_line = lines.next();
-
-    // if let Some(line) = first_line {
-    //     if line == "---" {
-    //         while let Some(line) = lines.next() {
-    //             if line == "---" {
-    //                 break;
-    //             } else {
-    //                 front_matter.push(line.to_string());
-    //             }
-    //         }
-    //         first_line = lines.next();
-    //     }
-    // }
-
-    let md_text = if let Some(line) = first_line {
-        // If there are lines left, join them and add a newline at the end
-        std::iter::once(line)
-            .chain(lines)
-            .collect::<Vec<&str>>()
-            .join("\n")
-            + "\n"
-    } else {
-        // If there are no lines left, return an empty string
-        String::new()
-    };
-
-    let parsed = markdown::to_mdast(&md_text, &markdown::ParseOptions::default());
-    let mut prettified = String::new();
-
-    match parsed {
-        Err(err) => return Err(format!("Could not prettify markdown, error: {}", err)),
-        Ok(node) => {
-            let result = visit_md_node(node);
-            if let Some(text) = result {
-                prettified.push_str(&text);
-            }
-        }
-    }
-    // Add the required number of blank lines
+pub fn align_vertical(
+    mut prettified: String,
+    style_map: &HashMap<String, String>,
+    height: u16,
+) -> String {
     let mut blank_lines = 0;
-    let (_width, height) = termion::terminal_size().unwrap();
 
     if style_map.get("vertical_alignment").unwrap() == "false" {
         blank_lines = 0;
@@ -333,6 +280,104 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
             }
         }
     }
+    return prettified;
+}
 
-    return Ok(prettified);
+pub fn align_horizontal(
+    mut prettified: String,
+    style_map: &HashMap<String, String>,
+    width: u16,
+    text: &str,
+) -> String {
+    let mut blank_chars = 0;
+    let lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
+    let line_color_map = store_colors(&lines);
+
+    if style_map.get("horizontal_alignment").unwrap() == "false" {
+        blank_chars = 0;
+    } else {
+        let longest_line = calculate_length_of_longest_line(text.to_string());
+
+        if width > longest_line as u16 {
+            blank_chars = (width - longest_line as u16) as usize / 2;
+        } else {
+            blank_chars = 0;
+        }
+    }
+
+    let mut new_prettified = String::new();
+
+    if blank_chars > 0 {
+        // for each line, add blank_chars spaces at the beginning
+        let reset_colored_line_ref: &str = "\x1B[0m";
+        for (i, line) in prettified.lines().enumerate() {
+            let original_color = match line_color_map.get(&i) {
+                Some(color) => color,
+                None => reset_colored_line_ref,
+            };
+            let new_line = format!(
+                "{}{}{}{}",
+                " ".repeat(blank_chars),
+                original_color,
+                line,
+                "\x1B[0m"
+            );
+            new_prettified.push_str(&new_line);
+            new_prettified.push('\n'); // Add newline after each line
+        }
+        return new_prettified; // Return the modified string
+    }
+
+    return prettified; // Return the original string if no alignment needed
+}
+
+pub fn align_content(
+    mut prettified: String,
+    style_map: &HashMap<String, String>,
+    lines: &str,
+) -> String {
+    let (_width, height) = termion::terminal_size().unwrap();
+    prettified = align_horizontal(prettified, style_map, _width, lines);
+    prettified = align_vertical(prettified, style_map, height);
+
+    return prettified;
+}
+
+pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<String, String> {
+    let map = style_map.clone();
+    let mut global_styles = STYLES.lock().unwrap();
+    *global_styles = map;
+    drop(global_styles);
+
+    let mut lines = md_text.lines();
+    // let mut front_matter = Vec::new();
+
+    let first_line = lines.next();
+
+    let md_text = if let Some(line) = first_line {
+        // If there are lines left, join them and add a newline at the end
+        std::iter::once(line)
+            .chain(lines)
+            .collect::<Vec<&str>>()
+            .join("\n")
+            + "\n"
+    } else {
+        // If there are no lines left, return an empty string
+        String::new()
+    };
+
+    let parsed = markdown::to_mdast(&md_text, &markdown::ParseOptions::default());
+    let mut prettified = String::new();
+
+    match parsed {
+        Err(err) => return Err(format!("Could not prettify markdown, error: {}", err)),
+        Ok(node) => {
+            let result = visit_md_node(node);
+            if let Some(text) = result {
+                prettified.push_str(&text);
+            }
+        }
+    }
+
+    return Ok(align_content(prettified, style_map, &md_text));
 }

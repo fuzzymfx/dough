@@ -1,5 +1,6 @@
 mod prettify;
 extern crate termion;
+mod utils;
 
 use paris::Logger;
 use std::error::Error;
@@ -7,7 +8,6 @@ use std::fmt;
 use std::fs;
 
 use std::collections::HashMap;
-use std::fs::FileTimes;
 use std::io::{stdin, stdout, Result, Write};
 use std::process::exit;
 use termion::event::Key;
@@ -229,7 +229,7 @@ impl Project {
 
         loop {
             Self::clear();
-            // print!("{}", termion::cursor::Hide);
+            print!("{}", termion::cursor::Hide);
             let file_path = self.fs_path.join(format!("{}.md", current_slide));
 
             if !file_path.exists() {
