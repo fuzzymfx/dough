@@ -238,6 +238,9 @@ impl Project {
                         "No slides found in the project".into(),
                     )));
                 } else {
+                    print!("{}", termion::cursor::Show);
+                    print!("{}", termion::clear::All);
+                    print!("Thank you :)\n");
                     exit(0)
                 }
             }
