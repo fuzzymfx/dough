@@ -89,9 +89,11 @@ TODO:
 
 - [ ] Improving the rendering engine:
   - [ ] Add support for rendering nested syntax
+  - [ ] Improve multi markdown element rendering (e.g. link inside a heading or a list)
+  - [ ] Add proper support for common Markdown syntax
+    - [ ] Improve the rendering of thematic breaks
   - [ ] Improve the rendering of aligned text
     - [ ] Improve color correction after alignment
-  - [ ] Add proper support for common Markdown syntax
   - [ ] Improve the design language
   - [ ] Add support for images for terminals with image support
 - [ ] Syntax Highlighting in code blocks
