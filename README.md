@@ -83,14 +83,17 @@ The letters are case-insensitive.
 
 ## Contributing
 
+If you're familiar with Rust and are looking for a project to contribute to, Dough would be a decent starting point. Feel free to open an issue or submit a pull request.
+
 TODO:
 
-- [x] Proper support for line breaks and spaces.
-- [ ] Improve the rendering engine:
-  - [ ] handle all possible Markdown elements
-- [ ] Rendering style adjustment: differntiating different types of headings using color etc. and alignment
-- [ ] Full arrow key support + more hotkeys
-- [ ] Syntax Highlighting
+- [ ] Improving the rendering engine:
+  - [ ] Add proper support for common Markdown syntax
+  - [ ] Improve the design language
+- [ ] Syntax Highlighting in code blocks
+- [ ] Custom text alignment
+  - [ ] A regex match for individual text alignment - `[\c] - for center, [\l]\ (blank) -default - for left, [\r] - for right`  
+- [ ] Running code blocks on separate threads and outputting the results in the current console
 
 ## Acknowledgements
 
