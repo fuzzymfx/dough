@@ -42,3 +42,9 @@ pub fn store_colors(prettified: &Vec<String>) -> HashMap<usize, String> {
 
     colors
 }
+
+pub fn strip_ansi_codes(line: &str) -> String {
+    let re = Regex::new(r"\x1b\[[0-9;]*m").unwrap();
+    let result = re.replace_all(line, "");
+    result.to_string()
+}

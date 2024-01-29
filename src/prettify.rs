@@ -1,5 +1,5 @@
 extern crate lazy_static;
-use crate::utils::{calculate_length_of_longest_line, store_colors};
+use crate::utils::{calculate_length_of_longest_line, store_colors, strip_ansi_codes};
 
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -160,11 +160,23 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
         )),
 
         mdast::Node::Link(link) => {
-            let mut result = "[".purple().to_string();
-            result.push_str(&join_children(link.children).bright_green());
-            result.push_str(&"](".purple().to_string());
-            result.push_str(&link.url.bright_cyan().to_string());
-            result.push_str(&")".purple().to_string());
+            let color_url = styles
+                .get("link_url")
+                .map(|s| s.as_str())
+                .unwrap_or("green");
+            let color_text = styles
+                .get("link_text")
+                .map(|s| s.as_str())
+                .unwrap_or("blue");
+
+            let mut result = String::from("[");
+            result = result.replace("[", "");
+
+            result.push_str(&join_children(link.children).color(color_text).to_string());
+
+            result.push_str(" :(");
+            result.push_str(&link.url.color(color_url).to_string());
+            result.push(')');
             Some(result)
         }
 
@@ -246,6 +258,43 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
     }
 }
 
+pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> String {
+    let lines: Vec<&str> = content.split('\n').collect();
+
+    let max_length = lines
+        .iter()
+        .map(|s| strip_ansi_codes(s).len())
+        .max()
+        .unwrap_or(0);
+
+    let horizontal_border: String = "─".repeat(max_length + 6); // 6 for box corners and sides
+    let mut boxed_content = format!("┌{}┐\n", strip_ansi_codes(&horizontal_border)); // top border
+
+    for (i, line) in lines.iter().enumerate() {
+        let original_color = match line_color_map.get(&i) {
+            Some(color) => color,
+            None => "\x1B[0m",
+        };
+
+        let padding_length = if strip_ansi_codes(line).contains("•") {
+            (max_length - strip_ansi_codes(line).len()) + 4 // +4 to ensure space at the end and after bullet
+        } else {
+            (max_length - strip_ansi_codes(line).len()) + 2 // +2 to ensure space at the end
+        };
+
+        let padding = " ".repeat(padding_length);
+
+        boxed_content.push_str(&format!(
+            "│{}{}{}{}    │\n",
+            "\x1B[0m", original_color, line, padding
+        )); // content with side borders
+    }
+
+    boxed_content.push_str(&format!("└{}┘\n", strip_ansi_codes(&horizontal_border))); // bottom border
+
+    boxed_content
+}
+
 pub fn align_vertical(
     mut prettified: String,
     style_map: &HashMap<String, String>,
@@ -288,10 +337,9 @@ pub fn align_horizontal(
     style_map: &HashMap<String, String>,
     width: u16,
     text: &str,
+    line_color_map: HashMap<usize, String>,
 ) -> String {
     let blank_chars;
-    let lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
-    let line_color_map = store_colors(&lines);
 
     if style_map.get("horizontal_alignment").unwrap() == "false" {
         blank_chars = 0;
@@ -337,8 +385,21 @@ pub fn align_content(
     lines: &str,
 ) -> String {
     let (_width, height) = termion::terminal_size().unwrap();
-    prettified = align_horizontal(prettified, style_map, _width, lines);
-    prettified = align_vertical(prettified, style_map, height);
+
+    let mut content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
+    let mut line_color_map = store_colors(&content_lines);
+
+    if style_map.get("box").unwrap() == "true" {
+        prettified = draw_box(&prettified, &line_color_map);
+    }
+    content_lines = prettified.lines().map(|s| s.to_string()).collect();
+    line_color_map = store_colors(&content_lines);
+    if style_map.get("horizontal_alignment").unwrap() == "true" {
+        prettified = align_horizontal(prettified, style_map, _width, lines, line_color_map);
+    }
+    if style_map.get("vertical_alignment").unwrap() == "true" {
+        prettified = align_vertical(prettified, style_map, height);
+    }
 
     return prettified;
 }
@@ -378,6 +439,8 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
             }
         }
     }
+    let lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
+    let line_color_map = store_colors(&lines);
 
     return Ok(align_content(prettified, style_map, &md_text));
 }

@@ -13,13 +13,17 @@ ordered_list_bullet: yellow
 unordered_list_bullet: yellow
 ordered_list: white
 unordered_list: white
-link_text: bright_green
-link_url: bright_cyan
+link_text: black
+link_url: blue
 thematic_break: white on black
 
 # Terminal styles
+
 # clear will clear the terminal before rendering, you would need to scroll down to render each line
 clear: false
+
+box: false
+box_color: black on white
 
 # vertical_alignment will vertically align the text to the middle of the terminal
 vertical_alignment: true
