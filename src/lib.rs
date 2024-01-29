@@ -1,6 +1,7 @@
 mod prettify;
 extern crate termion;
 mod utils;
+use crate::utils::remove_last_n_lines;
 
 use paris::Logger;
 use std::error::Error;
@@ -110,20 +111,6 @@ impl Project {
         return Ok(());
     }
 
-    fn remove_last_n_lines(text: &str, n: u32) -> String {
-        let mut lines: Vec<&str> = text.lines().collect();
-
-        // Check if there is at least one line
-        if lines.is_empty() {
-            return String::from("");
-        } else {
-            for _ in 0..n {
-                lines.pop();
-            }
-        }
-        return lines.join("\n");
-    }
-
     fn render_term(
         file_contents: &str,
         style_map: &HashMap<String, String>,
@@ -180,12 +167,12 @@ impl Project {
         if render {
             if clear {
                 lines_value = slide.lines().count() as u32;
-                print!("{}", Self::remove_last_n_lines(&slide, lines_value));
+                print!("{}", remove_last_n_lines(&slide, lines_value));
             } else {
                 print!("{}", slide);
             }
         } else {
-            print!("{}", Self::remove_last_n_lines(&slide, lines_value));
+            print!("{}", remove_last_n_lines(&slide, lines_value));
         }
 
         let stdin = stdin();
@@ -229,7 +216,7 @@ impl Project {
 
         loop {
             Self::clear();
-            print!("{}", termion::cursor::Hide);
+            // print!("{}", termion::cursor::Hide);
             let file_path = self.fs_path.join(format!("{}.md", current_slide));
 
             if !file_path.exists() {

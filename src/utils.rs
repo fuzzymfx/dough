@@ -48,3 +48,17 @@ pub fn strip_ansi_codes(line: &str) -> String {
     let result = re.replace_all(line, "");
     result.to_string()
 }
+
+pub fn remove_last_n_lines(text: &str, n: u32) -> String {
+    let mut lines: Vec<&str> = text.lines().collect();
+
+    // Check if there is at least one line
+    if lines.is_empty() {
+        return String::from("");
+    } else {
+        for _ in 0..n {
+            lines.pop();
+        }
+    }
+    return lines.join("\n");
+}

@@ -331,26 +331,23 @@ pub fn align_vertical(
         }
     }
     if let Some(terminal_style) = style_map.get("terminal") {
+        let mut new_prettified = String::new();
         if terminal_style == "warp" {
-            // In case of "warp", add blank lines at the end
+            // If terminal style is warp, add blank lines at the end
             if blank_lines > 2 {
                 for _ in 0..blank_lines - 2 {
+                    new_prettified.push('\n');
                     prettified.push('\n');
                 }
-            } else {
-                prettified.push('\n');
-                prettified.push('\n');
             }
+            new_prettified.push_str(&prettified);
+            prettified = new_prettified;
         } else {
             // In all other cases, add blank lines at the beginning
-            let mut new_prettified = String::new();
             if blank_lines > 2 {
                 for _ in 0..blank_lines - 2 {
                     new_prettified.push('\n');
                 }
-            } else {
-                new_prettified.push('\n');
-                new_prettified.push('\n');
             }
             new_prettified.push_str(&prettified);
             prettified = new_prettified;
