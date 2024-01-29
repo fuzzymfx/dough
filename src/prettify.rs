@@ -251,7 +251,7 @@ pub fn align_vertical(
     style_map: &HashMap<String, String>,
     height: u16,
 ) -> String {
-    let mut blank_lines = 0;
+    let blank_lines;
 
     if style_map.get("vertical_alignment").unwrap() == "false" {
         blank_lines = 0;
@@ -284,12 +284,12 @@ pub fn align_vertical(
 }
 
 pub fn align_horizontal(
-    mut prettified: String,
+    prettified: String,
     style_map: &HashMap<String, String>,
     width: u16,
     text: &str,
 ) -> String {
-    let mut blank_chars = 0;
+    let blank_chars;
     let lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
     let line_color_map = store_colors(&lines);
 

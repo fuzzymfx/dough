@@ -143,7 +143,7 @@ impl Project {
         if style_map.get("clear").unwrap() == "true" {
             clear = true;
         }
-        let mut blank_lines: u32 = 0;
+        let blank_lines;
 
         let slide = prettify::prettify(file_contents, &style_map)?;
 
