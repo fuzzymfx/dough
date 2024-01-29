@@ -310,7 +310,6 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
             for word in words {
                 if word.contains("̶") {
                     let word_len = strip_ansi_codes(word).len() / 3;
-                    print!("{}", word_len);
                     formatted_line.push_str(&format!("{}{}", word, " ".repeat(word_len * 2)));
                 } else {
                     formatted_line.push_str(&format!("{} ", word));
