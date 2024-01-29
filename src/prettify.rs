@@ -303,9 +303,26 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
 
         let padding = " ".repeat(padding_length);
 
+        let mut formatted_line = String::new();
+
+        if line.contains("̶") {
+            let words: Vec<&str> = line.split_whitespace().collect();
+            for word in words {
+                if word.contains("̶") {
+                    let word_len = strip_ansi_codes(word).len() / 3;
+                    print!("{}", word_len);
+                    formatted_line.push_str(&format!("{}{}", word, " ".repeat(word_len * 2)));
+                } else {
+                    formatted_line.push_str(&format!("{} ", word));
+                }
+            }
+        } else {
+            formatted_line.push_str(line);
+        }
+
         boxed_content.push_str(&format!(
             "│{}{}{}{}{}    │\n",
-            "\x1B[0m", original_color, line, "\x1B[0m", padding
+            "\x1B[0m", original_color, formatted_line, "\x1B[0m", padding
         )); // content with side borders
     }
 
