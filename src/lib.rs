@@ -168,7 +168,7 @@ impl Project {
                 if (slide.lines().count() as u32) < lines_value {
                     lines_value = slide.lines().count() as u32;
                 } else if blank_lines > 2 && lines_value < blank_lines - 2 {
-                    lines_value = blank_lines - 2;
+                    lines_value = blank_lines - 3;
                 }
             } else {
                 if (slide.lines().count() as u32) < lines_value {
