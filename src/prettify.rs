@@ -285,8 +285,8 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
         let padding = " ".repeat(padding_length);
 
         boxed_content.push_str(&format!(
-            "│{}{}{}{}    │\n",
-            "\x1B[0m", original_color, line, padding
+            "│{}{}{}{}{}    │\n",
+            "\x1B[0m", original_color, line, "\x1B[0m", padding
         )); // content with side borders
     }
 
@@ -396,9 +396,11 @@ pub fn align_content(
     if style_map.get("box").unwrap() == "true" {
         prettified = draw_box(&prettified, &line_color_map);
     }
-    content_lines = prettified.lines().map(|s| s.to_string()).collect();
-    line_color_map = store_colors(&content_lines);
+
     if style_map.get("horizontal_alignment").unwrap() == "true" {
+        content_lines = prettified.lines().map(|s| s.to_string()).collect();
+        line_color_map = store_colors(&content_lines);
+
         prettified = align_horizontal(prettified, style_map, _width, lines, line_color_map);
     }
     if style_map.get("vertical_alignment").unwrap() == "true" {
@@ -443,8 +445,6 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
             }
         }
     }
-    let lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
-    let line_color_map = store_colors(&lines);
 
     return Ok(align_content(prettified, style_map, &md_text));
 }
