@@ -167,7 +167,7 @@ impl Project {
             if terminal_style == "warp" {
                 if (slide.lines().count() as u32) < lines_value {
                     lines_value = slide.lines().count() as u32;
-                } else if lines_value < blank_lines - 2 {
+                } else if blank_lines > 2 && lines_value < blank_lines - 2 {
                     lines_value = blank_lines - 2;
                 }
             } else {
