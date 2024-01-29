@@ -339,6 +339,7 @@ pub fn align_vertical(
                 }
             } else {
                 prettified.push('\n');
+                prettified.push('\n');
             }
         } else {
             // In all other cases, add blank lines at the beginning
@@ -347,9 +348,12 @@ pub fn align_vertical(
                 for _ in 0..blank_lines - 2 {
                     new_prettified.push('\n');
                 }
-                new_prettified.push_str(&prettified);
-                prettified = new_prettified;
+            } else {
+                new_prettified.push('\n');
+                new_prettified.push('\n');
             }
+            new_prettified.push_str(&prettified);
+            prettified = new_prettified;
         }
     }
     return prettified;
