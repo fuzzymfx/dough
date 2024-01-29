@@ -314,7 +314,11 @@ pub fn align_vertical(
     if let Some(terminal_style) = style_map.get("terminal") {
         if terminal_style == "warp" {
             // In case of "warp", add blank lines at the end
-            for _ in 0..blank_lines - 2 {
+            if blank_lines > 2 {
+                for _ in 0..blank_lines - 2 {
+                    prettified.push('\n');
+                }
+            } else {
                 prettified.push('\n');
             }
         } else {
