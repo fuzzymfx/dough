@@ -154,7 +154,7 @@ impl Project {
                 if (height - slide.lines().count() as u16) as u32 / 2 > 0 {
                     blank_lines = ((height - slide.lines().count() as u16) - 2) as u32;
                 } else {
-                    blank_lines = (height - slide.lines().count() as u16 - 2) as u32;
+                    blank_lines = 0;
                 }
             } else {
                 blank_lines = 0;
