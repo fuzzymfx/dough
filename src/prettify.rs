@@ -141,6 +141,22 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
             Some(result)
         }
 
+        mdast::Node::InlineCode(inline_code) => {
+            let text = inline_code.value;
+
+            let mut result = String::from("`").replace("`", "");
+
+            let color: &str = styles
+                .get("inline_code")
+                .map(|s| s.as_str())
+                .unwrap_or("green");
+
+            result.push_str(&text.color(color).to_string());
+            result.push_str("`".replace("`", "").as_str());
+
+            Some(result)
+        }
+
         mdast::Node::Code(code) => {
             let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
             let mut result = String::from("```\n").replace("```", "");
@@ -174,9 +190,12 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
 
             result.push_str(&join_children(link.children).color(color_text).to_string());
 
-            result.push_str(" :(");
-            result.push_str(&link.url.color(color_url).to_string());
-            result.push(')');
+            if link.url.to_string().contains("http") {
+                result.push_str(" :(");
+                result.push_str(&link.url.color(color_url).to_string());
+                result.push(')');
+            }
+
             Some(result)
         }
 

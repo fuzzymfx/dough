@@ -88,8 +88,12 @@ If you're familiar with Rust and are looking for a project to contribute to, Dou
 TODO:
 
 - [ ] Improving the rendering engine:
+  - [ ] Add support for rendering nested syntax
+  - [ ] Improve the rendering of aligned text
+    - [ ] Improve color correction after alignment
   - [ ] Add proper support for common Markdown syntax
   - [ ] Improve the design language
+  - [ ] Add support for images for terminals with image support
 - [ ] Syntax Highlighting in code blocks
 - [ ] Custom text alignment
   - [ ] A regex match for individual text alignment - `[\c] - for center, [\l]\ (blank) -default - for left, [\r] - for right`  
