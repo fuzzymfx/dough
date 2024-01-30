@@ -348,6 +348,13 @@ pub fn align_vertical(
             blank_lines = 0;
         }
     }
+    println!(
+        "{}, {}, {}\n",
+        blank_lines,
+        height,
+        prettified.lines().count()
+    );
+
     if let Some(terminal_style) = style_map.get("terminal") {
         let mut new_prettified = String::new();
         if terminal_style == "warp" {
@@ -357,9 +364,8 @@ pub fn align_vertical(
                     new_prettified.push('\n');
                     prettified.push('\n');
                 }
-            } else {
-                new_prettified.push('\n');
             }
+            new_prettified.push('\n');
             new_prettified.push_str(&prettified);
             prettified = new_prettified;
 
@@ -379,6 +385,7 @@ pub fn align_vertical(
             prettified = new_prettified;
         }
     }
+
     return prettified;
 }
 
