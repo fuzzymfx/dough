@@ -2,6 +2,9 @@
 
 Dough is a command-line tool written in Rust that allows you to create and present presentations using Markdown. It provides a simple and customizable way to create presentation decks and present them in both terminal and HTML modes.
 
+<img width="1840" alt="Screenshot 2024-01-30 at 11 47 43 AM" src="https://github.com/fuzzymfx/dough/assets/69160388/8351ee95-0589-46ff-ae72-5ab68bab6c03">
+
+
 ## Getting Started
 
 ### Prerequisites
