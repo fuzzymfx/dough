@@ -100,8 +100,8 @@ TODO:
   - [ ] Improve the design language
   - [ ] Add support for images for terminals with image support
 - [ ] Syntax Highlighting in code blocks
-- [ ] Custom text alignment
-  - [ ] A regex match for individual text alignment - `[\c] - for center, [\l]\ (blank) -default - for left, [\r] - for right`  
+- [x] Custom text alignment
+  - [x] A regex match for individual text alignment - `[\c] - for center, [\l]\ (blank) -default - for left, [\r] - for right`  
 - [ ] Running code blocks on separate threads and outputting the results in the current console
 
 ## Acknowledgements
