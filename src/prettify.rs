@@ -357,7 +357,6 @@ pub fn align_vertical(
                 }
             } else {
                 new_prettified.push('\n');
-                prettified.push('\n');
             }
             new_prettified.push_str(&prettified);
             prettified = new_prettified;
