@@ -1,8 +1,8 @@
 extern crate lazy_static;
 use crate::utils::{calculate_length_of_longest_line, store_colors, strip_ansi_codes};
 
-use std::collections::HashMap;
 use std::sync::Mutex;
+use std::{collections::HashMap, str};
 
 use colored::*;
 use markdown::mdast::{self};
@@ -348,13 +348,6 @@ pub fn align_vertical(
             blank_lines = 0;
         }
     }
-    println!(
-        "{}, {}, {}\n",
-        blank_lines,
-        height,
-        prettified.lines().count()
-    );
-
     if let Some(terminal_style) = style_map.get("terminal") {
         let mut new_prettified = String::new();
         if terminal_style == "warp" {
@@ -435,43 +428,49 @@ pub fn align_horizontal(
     return prettified; // Return the original string if no alignment needed
 }
 
-// pub fn align_custom(line: &str, longest_line: usize) -> String {
-//     let re = regex::Regex::new(r"\$\\\[([clr])\]\$").unwrap();
-//     let mut aligned_line = line.to_string();
-//     if let Some(capture) = re.captures(line) {
-//         match capture.get(1).unwrap().as_str() {
-//             "c" => {
-//                 let blank_spaces = (longest_line - line.len()) / 2;
-//                 aligned_line = format!(
-//                     "{}{}",
-//                     " ".repeat(blank_spaces),
-//                     &line.replace(capture.get(0).unwrap().as_str(), "")
-//                 );
-//             }
-//             "l" => {
-//                 let blank_spaces = longest_line - line.len();
-//                 aligned_line = format!(
-//                     "{}{}",
-//                     " ".repeat(blank_spaces),
-//                     &line.replace(capture.get(0).unwrap().as_str(), "")
-//                 );
-//             }
-//             "r" => {
-//                 let blank_spaces = longest_line - line.len();
-//                 aligned_line = format!(
-//                     "{}{}",
-//                     " ".repeat(blank_spaces),
-//                     &line.replace(capture.get(0).unwrap().as_str(), "")
-//                 );
-//             }
-//             _ => {
-//                 // Invalid capture group
-//             }
-//         }
-//     }
-//     print!("{}", aligned_line);
-//     return aligned_line.to_string();
-// }
+pub fn align_custom(prettified: String, lines: &str) -> String {
+    let longest_line = calculate_length_of_longest_line(lines.to_string());
+
+    let mut new_prettified = String::new();
+
+    for line in prettified.lines() {
+        let mut aligned_line = line.to_string();
+        let re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
+        if let Some(captures) = re.captures(&aligned_line) {
+            let alignment = captures.get(1).unwrap().as_str();
+
+            let new_line = aligned_line.replace(&captures[0], "");
+
+            let line_length = strip_ansi_codes(&new_line).len();
+
+            print!("{}, {}\n", line_length, longest_line);
+
+            match alignment {
+                "c" => {
+                    let spaces = (longest_line - line_length) / 2;
+                    let mut new_line = format!("{}{}", " ".repeat(spaces + 3), line);
+                    new_line = new_line.replace(&captures[0], "");
+                    aligned_line = new_line;
+                }
+                "r" => {
+                    let spaces = longest_line - line_length;
+                    let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+                    new_line = new_line.replace(&captures[0], "");
+                    aligned_line = new_line;
+                }
+                _ => {
+                    // Do nothing for "l" alignment
+                    aligned_line = aligned_line.replace(&captures[0], "");
+                }
+            }
+        }
+
+        new_prettified.push_str(&aligned_line);
+        new_prettified.push('\n');
+    }
+
+    new_prettified
+}
 
 pub fn align_content(
     mut prettified: String,
@@ -486,6 +485,8 @@ pub fn align_content(
     let mut content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
 
     let mut line_color_map = store_colors(&content_lines);
+
+    prettified = align_custom(prettified, lines);
 
     if style_map.get("box").unwrap() == "true" {
         upper_bound += 4;
@@ -507,7 +508,6 @@ pub fn align_content(
             &mut upper_bound,
             &mut lower_bound,
         );
-    } else {
     }
     prettified.push('\n');
 
