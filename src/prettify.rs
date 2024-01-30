@@ -334,6 +334,8 @@ pub fn align_vertical(
     mut prettified: String,
     style_map: &HashMap<String, String>,
     height: u16,
+    upper_bound: &mut i32,
+    lower_bound: &mut i32,
 ) -> String {
     let blank_lines;
 
@@ -360,6 +362,9 @@ pub fn align_vertical(
             }
             new_prettified.push_str(&prettified);
             prettified = new_prettified;
+
+            *upper_bound += blank_lines as i32;
+            *lower_bound += blank_lines as i32;
         } else {
             // In all other cases, add blank lines at the beginning
             if blank_lines > 2 {
@@ -431,10 +436,15 @@ pub fn align_content(
 ) -> String {
     let (_width, height) = termion::terminal_size().unwrap();
 
+    let mut upper_bound: i32 = prettified.lines().count() as i32;
+    let mut lower_bound: i32 = 0;
+
     let mut content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
     let mut line_color_map = store_colors(&content_lines);
 
     if style_map.get("box").unwrap() == "true" {
+        upper_bound += 4;
+        lower_bound -= 1;
         prettified = draw_box(&prettified, &line_color_map);
     }
 
@@ -445,10 +455,43 @@ pub fn align_content(
         prettified = align_horizontal(prettified, style_map, _width, lines, line_color_map);
     }
     if style_map.get("vertical_alignment").unwrap() == "true" {
-        prettified = align_vertical(prettified, style_map, height);
+        prettified = align_vertical(
+            prettified,
+            style_map,
+            height,
+            &mut upper_bound,
+            &mut lower_bound,
+        );
+    } else {
     }
+    prettified.push('\n');
+
+    let mut global_styles = STYLES.lock().unwrap();
+
+    global_styles.insert("upper_bound".to_string(), upper_bound.to_string());
+    global_styles.insert("lower_bound".to_string(), lower_bound.to_string());
+    drop(global_styles);
 
     return prettified;
+}
+
+pub fn get_bounds() -> (u32, u32) {
+    let global_styles = STYLES.lock().unwrap();
+
+    let upper_bound = global_styles
+        .get("upper_bound")
+        .unwrap()
+        .parse::<u32>()
+        .unwrap();
+    let lower_bound = global_styles
+        .get("lower_bound")
+        .unwrap()
+        .parse::<u32>()
+        .unwrap();
+
+    drop(global_styles);
+
+    return (upper_bound, lower_bound);
 }
 
 pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<String, String> {

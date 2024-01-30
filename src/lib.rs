@@ -117,49 +117,33 @@ impl Project {
         render: bool,
         lines: &u32,
     ) -> std::result::Result<(NavigationAction, u32), Box<dyn Error>> {
-        let (_width, height) = termion::terminal_size()?;
-
-        // TODO: ADD FEATURE TO RENDER A FRAME OVER THE RENDERING AREA
-
-        //use this to draw a frame over the rendering area.
-        //use the style map to determine the color of the frame, and the position of the frame: center, left, right, top, bottom
-        // subtract the cordinates of the frame from the width and height of the terminal to get the rendering area
-
         let mut clear: bool = false;
 
         if style_map.get("clear").unwrap() == "true" {
             clear = true;
         }
-        let blank_lines;
 
         let slide = prettify::prettify(file_contents, &style_map)?;
 
-        if style_map.get("vertical_alignment").unwrap() == "false" {
-            blank_lines = 0;
-        } else {
-            if height > slide.lines().count() as u16 {
-                if (height - slide.lines().count() as u16) as u32 / 2 > 0 {
-                    blank_lines = ((height - slide.lines().count() as u16) - 2) as u32;
-                } else {
-                    blank_lines = 0;
-                }
-            } else {
-                blank_lines = 0;
-            }
-        }
+        let (upper_bound, lower_bound) = prettify::get_bounds();
 
         let mut lines_value = *lines;
 
         if let Some(terminal_style) = style_map.get("terminal") {
+            println!("{}\n", lines_value);
+            println!("{} {}\n", upper_bound, lower_bound);
+
             if terminal_style == "warp" {
-                if (slide.lines().count() as u32) < lines_value {
-                    lines_value = slide.lines().count() as u32;
-                } else if blank_lines > 2 && lines_value < blank_lines - 2 {
-                    lines_value = blank_lines - 3;
+                if upper_bound < lines_value {
+                    lines_value = upper_bound;
+                } else if lower_bound > lines_value {
+                    lines_value = lower_bound - 1;
                 }
             } else {
-                if (slide.lines().count() as u32) < lines_value {
-                    lines_value = slide.lines().count() as u32;
+                if upper_bound < lines_value {
+                    lines_value = upper_bound;
+                } else if lower_bound > lines_value {
+                    lines_value = lower_bound;
                 }
             }
         }
@@ -216,7 +200,7 @@ impl Project {
 
         loop {
             Self::clear();
-            print!("{}", termion::cursor::Hide);
+            // print!("{}", termion::cursor::Hide);
             let file_path = self.fs_path.join(format!("{}.md", current_slide));
 
             if !file_path.exists() {
