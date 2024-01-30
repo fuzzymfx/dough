@@ -334,8 +334,8 @@ pub fn align_vertical(
     mut prettified: String,
     style_map: &HashMap<String, String>,
     height: u16,
-    upper_bound: &mut i32,
-    lower_bound: &mut i32,
+    upper_bound: &mut u32,
+    lower_bound: &mut u32,
 ) -> String {
     let blank_lines;
 
@@ -363,8 +363,8 @@ pub fn align_vertical(
             new_prettified.push_str(&prettified);
             prettified = new_prettified;
 
-            *upper_bound += blank_lines as i32;
-            *lower_bound += blank_lines as i32;
+            *upper_bound += blank_lines;
+            *lower_bound += blank_lines;
         } else {
             // In all other cases, add blank lines at the beginning
             if blank_lines > 2 {
@@ -436,15 +436,14 @@ pub fn align_content(
 ) -> String {
     let (_width, height) = termion::terminal_size().unwrap();
 
-    let mut upper_bound: i32 = prettified.lines().count() as i32;
-    let mut lower_bound: i32 = 0;
+    let mut upper_bound = prettified.lines().count() as u32;
+    let mut lower_bound = 0;
 
     let mut content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
     let mut line_color_map = store_colors(&content_lines);
 
     if style_map.get("box").unwrap() == "true" {
         upper_bound += 4;
-        lower_bound -= 1;
         prettified = draw_box(&prettified, &line_color_map);
     }
 

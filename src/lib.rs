@@ -130,23 +130,23 @@ impl Project {
         let mut lines_value = *lines;
 
         if let Some(terminal_style) = style_map.get("terminal") {
-            println!("{}\n", lines_value);
-            println!("{} {}\n", upper_bound, lower_bound);
-
             if terminal_style == "warp" {
                 if upper_bound < lines_value {
                     lines_value = upper_bound;
-                } else if lower_bound > lines_value {
-                    lines_value = lower_bound - 1;
+                } else if lower_bound > 0 && lower_bound - 2 > lines_value {
+                    lines_value = lower_bound - 2;
                 }
             } else {
-                if upper_bound < lines_value {
-                    lines_value = upper_bound;
-                } else if lower_bound > lines_value {
-                    lines_value = lower_bound;
-                }
+                // if upper_bound < lines_value {
+                //     lines_value = upper_bound;
+                // } else if lower_bound > lines_value {
+                //     lines_value = lower_bound;
+                // }
             }
         }
+
+        // println!("{}\n", lines_value);
+        // println!("{} {}\n", upper_bound, lower_bound);
 
         if render {
             if clear {
@@ -200,7 +200,7 @@ impl Project {
 
         loop {
             Self::clear();
-            // print!("{}", termion::cursor::Hide);
+            print!("{}", termion::cursor::Hide);
             let file_path = self.fs_path.join(format!("{}.md", current_slide));
 
             if !file_path.exists() {
