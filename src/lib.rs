@@ -133,7 +133,7 @@ impl Project {
             if terminal_style == "warp" {
                 if upper_bound < lines_value {
                     lines_value = upper_bound;
-                } else if lower_bound > 0 && lower_bound - 2 > lines_value {
+                } else if lower_bound > 2 && lower_bound - 2 > lines_value {
                     lines_value = lower_bound - 2;
                 }
             } else {

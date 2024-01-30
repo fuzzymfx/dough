@@ -390,12 +390,11 @@ pub fn align_horizontal(
     line_color_map: HashMap<usize, String>,
 ) -> String {
     let blank_chars;
+    let longest_line = calculate_length_of_longest_line(text.to_string());
 
     if style_map.get("horizontal_alignment").unwrap() == "false" {
         blank_chars = 0;
     } else {
-        let longest_line = calculate_length_of_longest_line(text.to_string());
-
         if width > longest_line as u16 {
             blank_chars = (width - longest_line as u16) as usize / 2;
         } else {
@@ -429,6 +428,44 @@ pub fn align_horizontal(
     return prettified; // Return the original string if no alignment needed
 }
 
+// pub fn align_custom(line: &str, longest_line: usize) -> String {
+//     let re = regex::Regex::new(r"\$\\\[([clr])\]\$").unwrap();
+//     let mut aligned_line = line.to_string();
+//     if let Some(capture) = re.captures(line) {
+//         match capture.get(1).unwrap().as_str() {
+//             "c" => {
+//                 let blank_spaces = (longest_line - line.len()) / 2;
+//                 aligned_line = format!(
+//                     "{}{}",
+//                     " ".repeat(blank_spaces),
+//                     &line.replace(capture.get(0).unwrap().as_str(), "")
+//                 );
+//             }
+//             "l" => {
+//                 let blank_spaces = longest_line - line.len();
+//                 aligned_line = format!(
+//                     "{}{}",
+//                     " ".repeat(blank_spaces),
+//                     &line.replace(capture.get(0).unwrap().as_str(), "")
+//                 );
+//             }
+//             "r" => {
+//                 let blank_spaces = longest_line - line.len();
+//                 aligned_line = format!(
+//                     "{}{}",
+//                     " ".repeat(blank_spaces),
+//                     &line.replace(capture.get(0).unwrap().as_str(), "")
+//                 );
+//             }
+//             _ => {
+//                 // Invalid capture group
+//             }
+//         }
+//     }
+//     print!("{}", aligned_line);
+//     return aligned_line.to_string();
+// }
+
 pub fn align_content(
     mut prettified: String,
     style_map: &HashMap<String, String>,
@@ -440,6 +477,7 @@ pub fn align_content(
     let mut lower_bound = 0;
 
     let mut content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
+
     let mut line_color_map = store_colors(&content_lines);
 
     if style_map.get("box").unwrap() == "true" {
@@ -453,6 +491,7 @@ pub fn align_content(
 
         prettified = align_horizontal(prettified, style_map, _width, lines, line_color_map);
     }
+
     if style_map.get("vertical_alignment").unwrap() == "true" {
         prettified = align_vertical(
             prettified,
