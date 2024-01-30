@@ -137,16 +137,13 @@ impl Project {
                     lines_value = lower_bound - 2;
                 }
             } else {
-                // if upper_bound < lines_value {
-                //     lines_value = upper_bound;
-                // } else if lower_bound > lines_value {
-                //     lines_value = lower_bound;
-                // }
+                if upper_bound < lines_value {
+                    lines_value = upper_bound;
+                } else if lower_bound > lines_value {
+                    lines_value = lower_bound;
+                }
             }
         }
-
-        // println!("{}\n", lines_value);
-        // println!("{} {}\n", upper_bound, lower_bound);
 
         if render {
             if clear {
