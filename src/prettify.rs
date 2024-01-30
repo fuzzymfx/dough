@@ -355,6 +355,9 @@ pub fn align_vertical(
                     new_prettified.push('\n');
                     prettified.push('\n');
                 }
+            } else {
+                new_prettified.push('\n');
+                prettified.push('\n');
             }
             new_prettified.push_str(&prettified);
             prettified = new_prettified;
@@ -364,8 +367,11 @@ pub fn align_vertical(
                 for _ in 0..blank_lines - 2 {
                     new_prettified.push('\n');
                 }
+            } else {
+                new_prettified.push('\n');
             }
             new_prettified.push_str(&prettified);
+            new_prettified.push('\n');
             prettified = new_prettified;
         }
     }

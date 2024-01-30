@@ -216,7 +216,7 @@ impl Project {
 
         loop {
             Self::clear();
-            // print!("{}", termion::cursor::Hide);
+            print!("{}", termion::cursor::Hide);
             let file_path = self.fs_path.join(format!("{}.md", current_slide));
 
             if !file_path.exists() {

@@ -92,7 +92,7 @@ TODO:
   - [ ] Improve multi markdown element rendering (e.g. link inside a heading or a list)
   - [ ] Add proper support for common Markdown syntax
     - [ ] Improve the rendering of thematic breaks
-  - [ ] Improve the rendering of aligned text
+  - [x] Improve the rendering of aligned text
     - [ ] Improve color correction after alignment
   - [ ] Improve the design language
   - [ ] Add support for images for terminals with image support
