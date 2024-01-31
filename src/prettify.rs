@@ -9,11 +9,19 @@ use markdown::mdast::{self};
 use regex::Regex;
 
 use lazy_static::lazy_static;
-// use termion::style;
 
 lazy_static! {
+    /// Style map is used to store the styles associated with a particular markdown element
+    /// The styles are stored as a HashMap with the key being the name of the markdown element
+    /// and the value being the style associated with it.
+    /// The styles are stored as strings and are converted to the appropriate type when needed.
+    /// The styles are stored in the global STYLES variable, which is a Mutex<HashMap<String, String>>
+    /// This also stores the upper and lower bounds of the content, which is used for vertical alignment
     static ref STYLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
 }
+
+/// This function is used to join the children of a particular mdast node
+/// The join_fn is used to decorate the text before joining it
 
 fn join_children_with(join_fn: fn(String) -> String, children: Vec<mdast::Node>) -> String {
     let mut result = String::default();
@@ -26,11 +34,16 @@ fn join_children_with(join_fn: fn(String) -> String, children: Vec<mdast::Node>)
     return result;
 }
 
+/// This function is used to join the children of a particular mdast node
+
 fn join_children(children: Vec<mdast::Node>) -> String {
     return join_children_with(|x| x, children);
 }
 
-// Recursively visit the mdast tree and return a string
+/// Recursively visit the mdast tree and return a string
+/// The string is decorated with the appropriate styles
+/// The styles are fetched from the global STYLES variable
+///
 fn visit_md_node(node: mdast::Node) -> Option<String> {
     let style_map = STYLES.lock().unwrap();
 
@@ -277,15 +290,20 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
     }
 }
 
+/// This function is used to draw a margin around the content based on the flag set in the style map
+/// The flag is set to true by default
+
 pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> String {
     let lines: Vec<&str> = content.split('\n').collect();
 
+    // Calculate the length of the longest line
     let max_length = lines
         .iter()
         .map(|s| strip_ansi_codes(s).len())
         .max()
         .unwrap_or(0);
 
+    // Create a horizontal border based on the length of the longest line
     let horizontal_border: String = "─".repeat(max_length + 6); // 6 for box corners and sides
     let mut boxed_content = format!("┌{}┐\n", strip_ansi_codes(&horizontal_border)); // top border
 
@@ -295,6 +313,7 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
             None => "\x1B[0m",
         };
 
+        // Edge case for lines with bullet points
         let padding_length = if strip_ansi_codes(line).contains("•") {
             (max_length - strip_ansi_codes(line).len()) + 4 // +4 to ensure space at the end and after bullet
         } else {
@@ -305,6 +324,7 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
 
         let mut formatted_line = String::new();
 
+        // Edge case for strikethrough text
         if line.contains("̶") {
             let words: Vec<&str> = line.split_whitespace().collect();
             for word in words {
@@ -330,6 +350,8 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
     boxed_content
 }
 
+/// This function is used to align the content vertically based on the flag set in the style map
+/// The flag is set to true by default
 pub fn align_vertical(
     mut prettified: String,
     style_map: &HashMap<String, String>,
@@ -343,6 +365,8 @@ pub fn align_vertical(
         blank_lines = 0;
     } else {
         if height > prettified.lines().count() as u16 {
+            // If height is greater than the number of lines, add blank lines at the beginning and end
+            // The number of blank lines is calculated by subtracting the number of lines from the height
             blank_lines = (height - prettified.lines().count() as u16) as u32 / 2;
         } else {
             blank_lines = 0;
@@ -351,7 +375,7 @@ pub fn align_vertical(
     if let Some(terminal_style) = style_map.get("terminal") {
         let mut new_prettified = String::new();
         if terminal_style == "warp" {
-            // If terminal style is warp, add blank lines at the end
+            // If terminal style is warp, add blank lines at the end and beginning
             if blank_lines > 2 {
                 for _ in 0..blank_lines - 2 {
                     new_prettified.push('\n');
@@ -362,6 +386,7 @@ pub fn align_vertical(
             new_prettified.push_str(&prettified);
             prettified = new_prettified;
 
+            // The upper and lower bounds are updated to reflect the changes
             *upper_bound += blank_lines;
             *lower_bound += blank_lines;
         } else {
@@ -382,6 +407,9 @@ pub fn align_vertical(
     return prettified;
 }
 
+/// This function is used to align the content horizontally based on the flag set in the style map
+/// The flag is set to true by default
+///
 pub fn align_horizontal(
     prettified: String,
     style_map: &HashMap<String, String>,
@@ -396,6 +424,8 @@ pub fn align_horizontal(
         blank_chars = 0;
     } else {
         if width > longest_line as u16 {
+            // If width is greater than the length of the longest line, add blank characters at the beginning
+            // The number of blank characters is calculated by subtracting the length of the longest line from the width
             blank_chars = (width - longest_line as u16) as usize / 2;
         } else {
             blank_chars = 0;
@@ -427,6 +457,11 @@ pub fn align_horizontal(
 
     return prettified; // Return the original string if no alignment needed
 }
+
+/// This function is used to align the content based on the alignment flag set in the markdown text
+/// The alignment flag is set using the following syntax:
+/// $[clr]$ -> center, left, right alignment respectively
+/// This is used for text alignment within the content
 
 pub fn align_custom(prettified: String, lines: &str) -> String {
     let longest_line = calculate_length_of_longest_line(lines.to_string());
@@ -471,6 +506,14 @@ pub fn align_custom(prettified: String, lines: &str) -> String {
 
     new_prettified
 }
+
+/// This function is used to align the entire content based on various flags and markdown text
+/// The flags are set in the style map  
+/// The flags are as follows:
+/// 1. box: true/false
+/// 2. horizontal_alignment: true/false
+/// 3. vertical_alignment: true/false
+/// 4. terminal: warp/normal    
 
 pub fn align_content(
     mut prettified: String,
@@ -520,6 +563,11 @@ pub fn align_content(
     return prettified;
 }
 
+/// This is used to get the upper and lower bounds of the content
+/// The upper and lower bounds are used for vertical alignment
+/// The upper bound is the number of blank lines at the beginning of the content
+/// The lower bound is the number of blank lines at the end of the content
+/// The bounds are stored in the global STYLES variable and are used fort scrolling
 pub fn get_bounds() -> (u32, u32) {
     let global_styles = STYLES.lock().unwrap();
 
@@ -538,6 +586,12 @@ pub fn get_bounds() -> (u32, u32) {
 
     return (upper_bound, lower_bound);
 }
+
+/// This function is used to prettify the markdown text
+/// The markdown text is parsed using the markdown crate
+/// The parsed mdast tree is then visited and converted to a string
+/// The string is then decorated with the appropriate styles
+/// The styles are fetched from the global STYLES variable
 
 pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<String, String> {
     let map = style_map.clone();
