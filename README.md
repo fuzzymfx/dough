@@ -99,7 +99,7 @@ TODO:
     - [ ] Improve the rendering of headings inside blockquotes
   - [ ] Improve color correction after alignment
   - [ ] Add proper support for common Markdown syntax
-    - [ ] Improve the rendering of thematic breaks
+    - [x] Improve the rendering of thematic breaks
 
 - Features:
   - [x] Improve the design language
