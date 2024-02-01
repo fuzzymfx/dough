@@ -92,7 +92,26 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
             Some(result)
         }
 
-        mdast::Node::Text(text) => Some(text.value),
+        mdast::Node::Text(text) => {
+            let mut result = String::default();
+            let re = Regex::new(r"~~(.*?)~~").unwrap();
+            if re.is_match(&text.value) {
+                for cap in re.captures_iter(&text.value) {
+                    let matched_text = &cap[1];
+                    let strikethrough_text = matched_text
+                        .chars()
+                        .map(|c| format!("{}{}", c, '\u{0336}'))
+                        .collect::<String>();
+                    let text_to_replace = format!("~~{}~~", matched_text);
+                    let replaced_text = text.value.replace(&text_to_replace, &strikethrough_text);
+                    print!("Replaced {}\n", replaced_text);
+                    result.push_str(&replaced_text);
+                }
+            } else {
+                result.push_str(&text.value);
+            }
+            Some(result)
+        }
 
         mdast::Node::Heading(heading) => {
             let level = heading.depth;
@@ -318,10 +337,12 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
 pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> String {
     let lines: Vec<&str> = content.split('\n').collect();
 
+    let lines_clone = lines.clone();
+
     // Calculate the length of the longest line
-    let max_length = lines
+    let max_length = lines_clone
         .iter()
-        .map(|s| strip_ansi_codes(s).len())
+        .map(|s| strip_ansi_codes(s).replace("̶", "").len())
         .max()
         .unwrap_or(0);
 
@@ -334,26 +355,11 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
             Some(color) => color,
             None => "\x1B[0m",
         };
-
-        let padding_length = max_length - strip_ansi_codes(line).chars().count();
+        let free_line = line.replace("̶", "");
+        let padding_length = max_length - strip_ansi_codes(&free_line).chars().count();
         let padding = " ".repeat(padding_length);
 
-        let mut formatted_line = String::default();
-
-        // Edge case for strikethrough text
-        if line.contains("̶") {
-            let words: Vec<&str> = line.split_whitespace().collect();
-            for word in words {
-                if word.contains("̶") {
-                    let word_len = strip_ansi_codes(word).len() / 3;
-                    formatted_line.push_str(&format!("{}{}", word, " ".repeat(word_len)));
-                } else {
-                    formatted_line.push_str(&format!("{} ", word));
-                }
-            }
-        } else {
-            formatted_line.push_str(line);
-        }
+        let formatted_line = String::from(*line);
 
         boxed_content.push_str(&format!(
             "│  {}{}{}{}{}  │\n",
