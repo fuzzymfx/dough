@@ -90,13 +90,16 @@ If you're familiar with Rust and are looking for a project to contribute to, Dou
 
 TODO:
 
+- Bugs:
 - [ ] Improving the rendering engine:
-  - [ ] Add support for rendering nested syntax
+  - [x] Add support for rendering **nested syntax**
+	- [ ] **Fix the color storage** of multiline elements while parsing a line and stripping the ANSI escape sequences.
   - [ ] Improve multi markdown element rendering (e.g. link inside a heading or a list)
+  - [ ] Improve color correction after alignment
   - [ ] Add proper support for common Markdown syntax
     - [ ] Improve the rendering of thematic breaks
-  - [x] Improve the rendering of aligned text
-    - [ ] Improve color correction after alignment
+
+- Features:
   - [ ] Improve the design language
   - [ ] Add support for images for terminals with image support
 - [ ] Syntax Highlighting in code blocks
