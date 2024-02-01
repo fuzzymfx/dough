@@ -355,7 +355,11 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
             Some(color) => color,
             None => "\x1B[0m",
         };
+        // Remove the strikethrough character from the line
+        // These characters add extra length to the line
+
         let free_line = line.replace("̶", "");
+        // Calculate the number of spaces to be added to the end of the line based on the line free of strikethrough characters
         let padding_length = max_length - strip_ansi_codes(&free_line).chars().count();
         let padding = " ".repeat(padding_length);
 
