@@ -524,7 +524,18 @@ pub fn align_custom(prettified: String, lines: &str) -> String {
             }
         }
 
-        new_prettified.push_str(&aligned_line);
+        // handle rendering thematic breaks
+
+        if line == "---" || line == "***" || line == "___" {
+            let mut new_line = String::from(line.replace("---", ""));
+            for _ in 0..longest_line {
+                new_line.push_str("-");
+            }
+            new_prettified.push_str(&new_line);
+        } else {
+            new_prettified.push_str(&aligned_line);
+        }
+
         new_prettified.push('\n');
     }
 
