@@ -23,10 +23,14 @@ lazy_static! {
 /// This function is used to join the children of a particular mdast node
 /// The join_fn is used to decorate the text before joining it
 
-fn join_children_with(join_fn: fn(String) -> String, children: Vec<mdast::Node>) -> String {
+fn join_children_with(
+    join_fn: fn(String) -> String,
+    depth: usize,
+    children: Vec<mdast::Node>,
+) -> String {
     let mut result = String::default();
     for child in children {
-        if let Some(text) = visit_md_node(child) {
+        if let Some(text) = visit_md_node(child, depth) {
             let decorated_text = join_fn(text);
             result.push_str(&decorated_text);
         }
@@ -36,15 +40,15 @@ fn join_children_with(join_fn: fn(String) -> String, children: Vec<mdast::Node>)
 
 /// This function is used to join the children of a particular mdast node
 
-fn join_children(children: Vec<mdast::Node>) -> String {
-    return join_children_with(|x| x, children);
+fn join_children(children: Vec<mdast::Node>, depth: usize) -> String {
+    return join_children_with(|x| x, depth, children);
 }
 
 /// Recursively visit the mdast tree and return a string
 /// The string is decorated with the appropriate styles
 /// The styles are fetched from the global STYLES variable
 ///
-fn visit_md_node(node: mdast::Node) -> Option<String> {
+fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
     let style_map = STYLES.lock().unwrap();
 
     let styles = style_map.clone();
@@ -54,13 +58,13 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
     match node {
         mdast::Node::Root(root) => {
             let mut result = String::default();
-            result.push_str(&join_children(root.children));
+            result.push_str(&join_children(root.children, depth));
             result.push('\n');
             Some(result)
         }
 
         mdast::Node::Paragraph(paragraph) => {
-            let text_start = &join_children(paragraph.children.clone());
+            let text_start = &join_children(paragraph.children.clone(), depth);
             let mut result = String::from("\n");
 
             let re = Regex::new(r"~~(.*?)~~").unwrap();
@@ -76,6 +80,11 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                     result.push_str(&replaced_text);
                 }
             } else {
+                // the depth is used to calculate the indentation
+                // currently, blockquotes are indented by 2 spaces
+
+                let item_text = " ".white().on_black().to_string().repeat(depth);
+                result.push_str(&item_text);
                 result.push_str(text_start);
             }
 
@@ -96,7 +105,7 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                 1 => {
                     color = styles.get("h1").map(|s| s.as_str()).unwrap_or("red");
                     item_text.push_str(
-                        &format!("{}", join_children(heading.children))
+                        &format!("█ {}", join_children(heading.children, depth))
                             .color(color)
                             .to_string(),
                     );
@@ -105,7 +114,7 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                 2 => {
                     color = styles.get("h2").map(|s| s.as_str()).unwrap_or("yellow");
                     item_text.push_str(
-                        &format!("{}", join_children(heading.children))
+                        &format!("██ {}", join_children(heading.children, depth))
                             .color(color)
                             .to_string(),
                     );
@@ -114,7 +123,7 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                 3 => {
                     color = styles.get("h3").map(|s| s.as_str()).unwrap_or("green");
                     item_text.push_str(
-                        &format!("{}", join_children(heading.children))
+                        &format!("███ {}", join_children(heading.children, depth))
                             .color(color)
                             .to_string(),
                     );
@@ -123,7 +132,7 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                 4 => {
                     color = styles.get("h4").map(|s| s.as_str()).unwrap_or("blue");
                     item_text.push_str(
-                        &format!("{}", join_children(heading.children))
+                        &format!("████ {}", join_children(heading.children, depth))
                             .color(color)
                             .to_string(),
                     );
@@ -132,7 +141,7 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                 5 => {
                     color = styles.get("h5").map(|s| s.as_str()).unwrap_or("magenta");
                     item_text.push_str(
-                        &format!("{}", join_children(heading.children))
+                        &format!("█████ {}", join_children(heading.children, depth))
                             .color(color)
                             .to_string(),
                     );
@@ -142,13 +151,13 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                 6 => {
                     color = styles.get("h6").map(|s| s.as_str()).unwrap_or("cyan");
                     item_text.push_str(
-                        &format!("{}", join_children(heading.children))
+                        &format!("██████ {}", join_children(heading.children, depth))
                             .color(color)
                             .to_string(),
                     );
                     result.push_str(&item_text);
                 }
-                _ => result.push_str(&join_children(heading.children)),
+                _ => result.push_str(&join_children(heading.children, depth)),
             }
             result.push('\n');
             Some(result)
@@ -180,11 +189,13 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
 
         mdast::Node::Emphasis(emphasis) => Some(join_children_with(
             |s| s.italic().to_string(),
+            depth,
             emphasis.children,
         )),
 
         mdast::Node::Strong(strong) => Some(join_children_with(
             |s| s.bold().to_string(),
+            depth,
             strong.children,
         )),
 
@@ -201,7 +212,11 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
             let mut result = String::from("[");
             result = result.replace("[", "");
 
-            result.push_str(&join_children(link.children).color(color_text).to_string());
+            result.push_str(
+                &join_children(link.children, depth)
+                    .color(color_text)
+                    .to_string(),
+            );
 
             if link.url.to_string().contains("http") {
                 result.push_str(" :(");
@@ -215,9 +230,9 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
         mdast::Node::ThematicBreak(_) => Some("\n---\n".to_string()),
 
         mdast::Node::BlockQuote(blockquote) => {
-            let mut result = String::from(">").replace(">", "");
+            let mut result = String::default();
             result.push_str(
-                &join_children(blockquote.children)
+                &join_children(blockquote.children, depth + 1)
                     .on_white()
                     .black()
                     .to_string(),
@@ -250,12 +265,12 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                     .unwrap_or("blue"),
             };
 
-            let mut result = String::new();
+            let mut result = String::default();
             let mut item_number = list.start.unwrap_or(1);
             result.push_str("\n");
 
             for item in list.children {
-                let mut item_text = String::new();
+                let mut item_text = "  ".repeat((depth) as usize);
                 if list.ordered {
                     item_text.push_str(
                         &format!(" {}. ", item_number)
@@ -263,15 +278,22 @@ fn visit_md_node(node: mdast::Node) -> Option<String> {
                             .to_string(),
                     );
                 } else {
-                    item_text.push_str(&format!(" • ").color(bullet_color).to_string());
+                    let sep = match depth {
+                        0 => " • ",
+                        1 => " · ",
+                        2 => " * ",
+                        3 => " - ",
+                        _ => " • ",
+                    };
+                    item_text.push_str(sep.to_string().color(bullet_color).to_string().as_str());
                 }
 
                 if let mdast::Node::ListItem(list_item) = item {
                     for child in list_item.children {
                         if let mdast::Node::Paragraph(paragraph) = child {
-                            item_text.push_str(&join_children(paragraph.children));
+                            item_text.push_str(&join_children(paragraph.children, depth + 1));
                         } else {
-                            item_text.push_str(&join_children(vec![child]));
+                            item_text.push_str(&join_children(vec![child], depth + 1));
                         }
                     }
                 }
@@ -304,7 +326,7 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
         .unwrap_or(0);
 
     // Create a horizontal border based on the length of the longest line
-    let horizontal_border: String = "─".repeat(max_length + 6); // 6 for box corners and sides
+    let horizontal_border: String = "─".repeat(max_length + 4); // 2 for box corners and sides
     let mut boxed_content = format!("┌{}┐\n", strip_ansi_codes(&horizontal_border)); // top border
 
     for (i, line) in lines.iter().enumerate() {
@@ -313,16 +335,10 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
             None => "\x1B[0m",
         };
 
-        // Edge case for lines with bullet points
-        let padding_length = if strip_ansi_codes(line).contains("•") {
-            (max_length - strip_ansi_codes(line).len()) + 4 // +4 to ensure space at the end and after bullet
-        } else {
-            (max_length - strip_ansi_codes(line).len()) + 2 // +2 to ensure space at the end
-        };
-
+        let padding_length = max_length - strip_ansi_codes(line).chars().count();
         let padding = " ".repeat(padding_length);
 
-        let mut formatted_line = String::new();
+        let mut formatted_line = String::default();
 
         // Edge case for strikethrough text
         if line.contains("̶") {
@@ -330,7 +346,7 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
             for word in words {
                 if word.contains("̶") {
                     let word_len = strip_ansi_codes(word).len() / 3;
-                    formatted_line.push_str(&format!("{}{}", word, " ".repeat(word_len * 2)));
+                    formatted_line.push_str(&format!("{}{}", word, " ".repeat(word_len)));
                 } else {
                     formatted_line.push_str(&format!("{} ", word));
                 }
@@ -340,7 +356,7 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
         }
 
         boxed_content.push_str(&format!(
-            "│{}{}{}{}{}    │\n",
+            "│  {}{}{}{}{}  │\n",
             "\x1B[0m", original_color, formatted_line, "\x1B[0m", padding
         )); // content with side borders
     }
@@ -478,12 +494,10 @@ pub fn align_custom(prettified: String, lines: &str) -> String {
 
             let line_length = strip_ansi_codes(&new_line).len();
 
-            print!("{}, {}\n", line_length, longest_line);
-
             match alignment {
                 "c" => {
                     let spaces = (longest_line - line_length) / 2;
-                    let mut new_line = format!("{}{}", " ".repeat(spaces + 3), line);
+                    let mut new_line = format!("{}{}", " ".repeat(spaces), line);
                     new_line = new_line.replace(&captures[0], "");
                     aligned_line = new_line;
                 }
@@ -622,7 +636,7 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
     match parsed {
         Err(err) => return Err(format!("Could not prettify markdown, error: {}", err)),
         Ok(node) => {
-            let result = visit_md_node(node);
+            let result = visit_md_node(node, 0);
             if let Some(text) = result {
                 prettified.push_str(&text);
             }
