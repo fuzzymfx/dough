@@ -225,8 +225,12 @@ impl Project {
                     return Ok((NavigationAction::Exit, lines_value))
                 }
                 Key::Esc | Key::Ctrl('c') => return Ok((NavigationAction::Exit, lines_value)),
-                Key::Up => return Ok((NavigationAction::ScrollUp, lines_value)),
-                Key::Down => return Ok((NavigationAction::ScrollDown, lines_value)),
+                Key::Up | Key::Char('k') | Key::Char('K') => {
+                    return Ok((NavigationAction::ScrollUp, lines_value))
+                }
+                Key::Down | Key::Char('j') | Key::Char('J') => {
+                    return Ok((NavigationAction::ScrollDown, lines_value))
+                }
                 _ => continue,
             }
         }
