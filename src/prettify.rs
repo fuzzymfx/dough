@@ -206,16 +206,25 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
         mdast::Node::Code(code) => {
             let language = code.lang.unwrap_or("plaintext".to_string());
             let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
-            let mut result = String::from("```\n").replace("```", "");
-            let mut highlighted_code = syntax_highlighter(&language, code.value.to_string());
-            // add indentation and spacing to the highlighted code
-            highlighted_code = highlighted_code
-                .lines()
-                .map(|line| format!("    {}", line))
-                .collect::<Vec<String>>()
-                .join("\n");
+            let syntax_highlighting = styles
+                .get("syntax_highlighting")
+                .map(|s| s.as_str())
+                .unwrap_or("true");
 
-            result.push_str(&highlighted_code.color(color).to_string());
+            let mut result = String::from("```\n").replace("```", "");
+            if syntax_highlighting == "true" {
+                let mut highlighted_code = syntax_highlighter(&language, code.value.to_string());
+                // add indentation and spacing to the highlighted code
+                highlighted_code = highlighted_code
+                    .lines()
+                    .map(|line| format!("    {}", line))
+                    .collect::<Vec<String>>()
+                    .join("\n");
+
+                result.push_str(&highlighted_code.color(color).to_string());
+            } else {
+                result.push_str(&code.value.color(color).to_string());
+            }
             result.push_str("\n```\n".replace("```", "").as_str());
             Some(result)
         }

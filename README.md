@@ -94,10 +94,10 @@ TODO:
 - [ ] Improving the rendering engine:
   - [x] Add support for rendering **nested syntax**
   - [ ] **Fix the color storage** of multiline elements while parsing a line and stripping the ANSI escape sequences.
-  - [ ] Improve multi markdown element rendering (e.g. link inside a heading or a list)
+    - [ ] Improve color correction after alignment
+  - [ ] Improve multi markdown element rendering
     - [x] Improve the rendering of lists, especially nested lists
     - [ ] Improve the rendering of headings inside blockquotes
-  - [ ] Improve color correction after alignment
   - [ ] Add proper support for common Markdown syntax
     - [x] Improve the rendering of thematic breaks
 

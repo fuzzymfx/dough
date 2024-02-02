@@ -22,7 +22,7 @@ thematic_break: white on black
 # clear will clear the terminal before rendering, you would need to scroll down to render each line
 clear: false
 
-box: false
+box: true
 box_color: black on white
 
 # vertical_alignment will vertically align the text to the middle of the terminal
@@ -30,6 +30,10 @@ vertical_alignment: true
 
 # horizontal_alignment will horizontally align the text to the middle of the terminal
 horizontal_alignment: true
+
+# syntax_highlighting will highlight the code syntax
+# this works well with the warp terminal, but not with the default Mac OS terminal
+syntax_highlighting: true
 
 # terminals vary in rendering. Currently, the following terminals are supported:
 #   - warp
