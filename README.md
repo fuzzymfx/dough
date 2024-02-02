@@ -104,10 +104,10 @@ TODO:
 - Features:
   - [x] Improve the design language
   - [ ] Add support for images for terminals with image support
-- [ ] Syntax Highlighting in code blocks
-- [x] Custom text alignment
-  - [x] A regex match for individual text alignment - `[\c] - for center, [\l]\ (blank) -default - for left, [\r] - for right`  
+- [x] Syntax Highlighting in code blocks
 - [ ] Running code blocks on separate threads and outputting the results in the current console
+- [x] Custom text alignment
+  - [x] A regex match for individual text alignment.  
 
 ## Acknowledgements
 

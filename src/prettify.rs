@@ -8,6 +8,11 @@ use colored::*;
 use markdown::mdast::{self};
 use regex::Regex;
 
+use syntect::easy::HighlightLines;
+use syntect::highlighting::{Style, ThemeSet};
+use syntect::parsing::SyntaxSet;
+use syntect::util::LinesWithEndings;
+
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -199,9 +204,18 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
         }
 
         mdast::Node::Code(code) => {
+            let language = code.lang.unwrap_or("plaintext".to_string());
             let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
             let mut result = String::from("```\n").replace("```", "");
-            result.push_str(&code.value.on_black().color(color).to_string());
+            let mut highlighted_code = syntax_highlighter(&language, code.value.to_string());
+            // add indentation and spacing to the highlighted code
+            highlighted_code = highlighted_code
+                .lines()
+                .map(|line| format!("    {}", line))
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            result.push_str(&highlighted_code.color(color).to_string());
             result.push_str("\n```\n".replace("```", "").as_str());
             Some(result)
         }
@@ -596,6 +610,29 @@ pub fn align_content(
     drop(global_styles);
 
     return prettified;
+}
+
+pub fn syntax_highlighter(language: &str, code_section: String) -> String {
+    // Load the syntaxes and themes
+    let ps = SyntaxSet::load_defaults_newlines();
+    let ts = ThemeSet::load_defaults();
+
+    // Find the syntax and theme by name
+    let syntax = ps.find_syntax_by_extension(language).unwrap();
+    let theme = &ts.themes["base16-ocean.dark"];
+
+    // Create a highlighter
+    let mut h = HighlightLines::new(syntax, theme);
+
+    // Highlight each line
+    let mut highlighted = String::new();
+    for line in LinesWithEndings::from(&code_section) {
+        let ranges: Vec<(Style, &str)> = h.highlight(line, &ps);
+        let escaped = syntect::util::as_24_bit_terminal_escaped(&ranges[..], true);
+        highlighted.push_str(&escaped);
+    }
+
+    highlighted
 }
 
 /// This is used to get the upper and lower bounds of the content
