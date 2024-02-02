@@ -23,6 +23,7 @@ enum NavigationAction {
     None,
     ScrollUp,
     ScrollDown,
+    Refresh,
 }
 
 // Define a struct to hold project information.
@@ -212,6 +213,8 @@ impl Project {
         // 5. ScrollDown - Scroll down the slide.
         // 6. None - Do nothing.
 
+        // Add a watcher here, any changes will call NavigationAction::Refresh
+
         for c in stdin.keys() {
             match c? {
                 Key::Right | Key::Char('l') | Key::Char('L') => {
@@ -231,6 +234,7 @@ impl Project {
                 Key::Down | Key::Char('j') | Key::Char('J') => {
                     return Ok((NavigationAction::ScrollDown, lines_value))
                 }
+                Key::Ctrl('r') => return Ok((NavigationAction::Refresh, lines_value)),
                 _ => continue,
             }
         }
@@ -245,6 +249,8 @@ impl Project {
         let mut stdout = stdout();
         write!(stdout, "\x1B[2J\x1B[1;1H").unwrap();
     }
+
+    // Implement a watcher for the project directory.
 
     /// Present a project in terminal mode.
     /// # Arguments
@@ -323,6 +329,11 @@ impl Project {
                     if lines > 0 {
                         lines -= 1;
                     }
+                }
+                (NavigationAction::Refresh, _new_lines_value) => {
+                    print!("//");
+                    render = false;
+                    lines = _new_lines_value;
                 }
                 (NavigationAction::Exit, _new_lines_value) => {
                     exit(0);
