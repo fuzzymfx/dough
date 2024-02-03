@@ -145,6 +145,7 @@ impl Project {
     /// A result indicating whether the project was rendered successfully or not.
 
     fn render_term(
+        self: &Self,
         file_contents: &str,
         style_map: &HashMap<String, String>,
         render: bool,
@@ -235,6 +236,7 @@ impl Project {
                     return Ok((NavigationAction::ScrollDown, lines_value))
                 }
                 Key::Ctrl('r') => return Ok((NavigationAction::Refresh, lines_value)),
+                Key::Char('r') => return Self::run_code(&self, lines_value),
                 _ => continue,
             }
         }
@@ -242,6 +244,34 @@ impl Project {
         drop(stdout);
 
         return Ok((NavigationAction::None, lines_value));
+    }
+
+    fn run_code(
+        self: &Self,
+        lines: u32,
+    ) -> std::result::Result<(NavigationAction, u32), Box<dyn std::error::Error>> {
+        let mut log = Logger::new();
+
+        log.info("Enter the code block number to run (e.g. 1, 2, 3):");
+
+        let mut input = String::new();
+
+        // match std::io::stdin().read_line(&mut input) {
+        //     Ok(_) => {
+        //         let block_number = input.trim().parse::<usize>()?;
+
+        //         let (lang, code) = prettify::get_code(block_number);
+        //         println!("Running code block of {}:\n {}...", lang, code);
+        //     }
+        //     Err(error) => println!("error: {error}"),
+        // }
+
+        let block_number = 1;
+
+        let (lang, code) = prettify::get_code(block_number);
+
+        println!("Running code block of {}:\n {}...", lang, code);
+        return Ok((NavigationAction::None, lines));
     }
 
     /// This clears the terminal.
@@ -307,7 +337,7 @@ impl Project {
             // Next and previous move to the next and previous slides respectively.
             // Exit exits the presentation.
 
-            match Self::render_term(&contents, &style_map, render, &lines)? {
+            match Self::render_term(self, &contents, &style_map, render, &lines)? {
                 (NavigationAction::Next, _new_lines_value) => {
                     render = true;
                     current_slide += 1;

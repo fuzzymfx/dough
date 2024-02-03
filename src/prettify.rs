@@ -1,6 +1,7 @@
 extern crate lazy_static;
 use crate::utils::{calculate_length_of_longest_line, store_colors, strip_ansi_codes};
 
+use std::collections::BTreeMap;
 use std::sync::Mutex;
 use std::{collections::HashMap, str};
 
@@ -24,8 +25,19 @@ lazy_static! {
     /// This also stores the upper and lower bounds of the content, which is used for vertical alignment
     static ref STYLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
 
+
+    /// This is used to store the colors associated with each line of the content
+    /// Using a static variable to store the colors ensures that the the colors are cached and the code does not recompute the colors
     static ref PS: SyntaxSet = SyntaxSet::load_defaults_newlines();
     static ref TS: ThemeSet = ThemeSet::load_defaults();
+
+    /// This is used to store the codes in the file
+    /// The codes are stored in sequence of their appearance in the file
+    /// The codes are stored in the global CODES variable, which is a BtreeMap<String, String>
+    ///     where the key is the language of the code and the value is the code itself
+    static ref CODES: Mutex<BTreeMap<String, String>> = Mutex::new(BTreeMap::new());
+
+
 }
 
 /// This function is used to join the children of a particular mdast node
@@ -208,6 +220,12 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
         mdast::Node::Code(code) => {
             let language = code.lang.unwrap_or("plaintext".to_string());
             let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
+
+            // Store the code in the global CODES variable
+            let mut codes = CODES.lock().unwrap();
+            codes.insert(language.clone(), code.value.to_string());
+            drop(codes);
+
             let syntax_highlighting = styles
                 .get("syntax_highlighting")
                 .map(|s| s.as_str())
@@ -666,6 +684,19 @@ pub fn get_bounds() -> (u32, u32) {
     drop(global_styles);
 
     return (upper_bound, lower_bound);
+}
+
+pub fn get_code(index: usize) -> (String, String) {
+    let codes = CODES.lock().unwrap();
+    let code_map: BTreeMap<usize, (String, String)> = codes
+        .iter()
+        .enumerate()
+        .map(|(i, (lang, code))| (i, (lang.clone(), code.clone())))
+        .collect();
+    drop(codes);
+
+    let (language, code) = code_map.get(&index).unwrap();
+    return (language.to_string(), code.to_string());
 }
 
 /// This function is used to prettify the markdown text
