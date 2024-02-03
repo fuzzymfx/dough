@@ -23,6 +23,9 @@ lazy_static! {
     /// The styles are stored in the global STYLES variable, which is a Mutex<HashMap<String, String>>
     /// This also stores the upper and lower bounds of the content, which is used for vertical alignment
     static ref STYLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+
+    static ref PS: SyntaxSet = SyntaxSet::load_defaults_newlines();
+    static ref TS: ThemeSet = ThemeSet::load_defaults();
 }
 
 /// This function is used to join the children of a particular mdast node
@@ -109,7 +112,6 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
                         .collect::<String>();
                     let text_to_replace = format!("~~{}~~", matched_text);
                     let replaced_text = text.value.replace(&text_to_replace, &strikethrough_text);
-                    print!("Replaced {}\n", replaced_text);
                     result.push_str(&replaced_text);
                 }
             } else {
@@ -623,12 +625,10 @@ pub fn align_content(
 
 pub fn syntax_highlighter(language: &str, code_section: String) -> String {
     // Load the syntaxes and themes
-    let ps = SyntaxSet::load_defaults_newlines();
-    let ts = ThemeSet::load_defaults();
-
-    // Find the syntax and theme by name
-    let syntax = ps.find_syntax_by_extension(language).unwrap();
-    let theme = &ts.themes["base16-ocean.dark"];
+    let syntax = PS
+        .find_syntax_by_extension(language)
+        .unwrap_or(PS.find_syntax_plain_text());
+    let theme = &TS.themes["base16-ocean.dark"];
 
     // Create a highlighter
     let mut h = HighlightLines::new(syntax, theme);
@@ -636,7 +636,7 @@ pub fn syntax_highlighter(language: &str, code_section: String) -> String {
     // Highlight each line
     let mut highlighted = String::new();
     for line in LinesWithEndings::from(&code_section) {
-        let ranges: Vec<(Style, &str)> = h.highlight(line, &ps);
+        let ranges: Vec<(Style, &str)> = h.highlight(line, &PS);
         let escaped = syntect::util::as_24_bit_terminal_escaped(&ranges[..], true);
         highlighted.push_str(&escaped);
     }
