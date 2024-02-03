@@ -7,13 +7,17 @@ use paris::Logger;
 use std::error::Error;
 use std::fmt;
 use std::fs;
+use std::sync::mpsc;
 
+use notify::{RecursiveMode, Watcher};
 use std::collections::HashMap;
 use std::io::{stdin, stdout, Result, Write};
 use std::process::exit;
+use std::thread;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
+extern crate notify;
 
 // All the possible navigation actions when presenting a project.
 enum NavigationAction {
@@ -145,6 +149,7 @@ impl Project {
     /// A result indicating whether the project was rendered successfully or not.
 
     fn render_term(
+        self: &Self,
         file_contents: &str,
         style_map: &HashMap<String, String>,
         render: bool,
@@ -214,6 +219,23 @@ impl Project {
         // 6. None - Do nothing.
 
         // Add a watcher here, any changes will call NavigationAction::Refresh
+
+        let (sender, receiver) = mpsc::channel();
+
+        let mut watcher = notify::recommended_watcher(
+            move |res: std::prelude::v1::Result<notify::Event, notify::Error>| match res {
+                Ok(_event) => {
+                    // println!("watcher event: {:?}", _event);
+                    let _ = sender.send(());
+                }
+                Err(e) => println!("watch error: {:?}", e),
+            },
+        )?;
+        watcher.watch(&self.fs_path, RecursiveMode::NonRecursive)?;
+
+        if let Ok(_) = receiver.recv() {
+            return Ok((NavigationAction::Refresh, lines_value));
+        }
 
         for c in stdin.keys() {
             match c? {
@@ -307,7 +329,7 @@ impl Project {
             // Next and previous move to the next and previous slides respectively.
             // Exit exits the presentation.
 
-            match Self::render_term(&contents, &style_map, render, &lines)? {
+            match Self::render_term(self, &contents, &style_map, render, &lines)? {
                 (NavigationAction::Next, _new_lines_value) => {
                     render = true;
                     current_slide += 1;
@@ -331,7 +353,6 @@ impl Project {
                     }
                 }
                 (NavigationAction::Refresh, _new_lines_value) => {
-                    print!("//");
                     render = false;
                     lines = _new_lines_value;
                 }
