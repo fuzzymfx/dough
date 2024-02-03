@@ -96,18 +96,20 @@ TODO:
   - [ ] **Fix the color storage** of multiline elements while parsing a line and stripping the ANSI escape sequences.
     - [ ] Improve color correction after alignment
   - [ ] Improve multi markdown element rendering
-    - [x] Improve the rendering of lists, especially nested lists
-    - [ ] Improve the rendering of headings inside blockquotes
+    - [x] nested lists
+    - [ ] blockquotes
   - [ ] Add proper support for common Markdown syntax
     - [x] Improve the rendering of thematic breaks
 
 - Features:
+  - [ ] Hot Reload ?
   - [x] Improve the design language
   - [ ] Add support for images for terminals with image support
 - [x] Syntax Highlighting in code blocks
 - [ ] Running code blocks on separate threads and outputting the results in the current console
 - [x] Custom text alignment
-  - [x] A regex match for individual text alignment.  
+  - [x] A regex match for individual text alignment.
+  - [ ] A regex match for the whole segment alignment.
 
 ## Acknowledgements
 
