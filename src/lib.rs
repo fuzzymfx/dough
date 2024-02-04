@@ -1,12 +1,16 @@
 mod prettify;
 extern crate termion;
+mod ramen;
 mod utils;
-use crate::utils::{remove_last_n_lines, run_code};
+use crate::ramen::run_code;
+use crate::utils::remove_last_n_lines;
 
-use paris::Logger;
 use std::error::Error;
 use std::fmt;
 use std::fs;
+use std::thread;
+
+use paris::Logger;
 
 use std::collections::HashMap;
 use std::io::{stdin, stdout, Result, Write};
@@ -236,10 +240,17 @@ impl Project {
                     return Ok((NavigationAction::ScrollDown, lines_value))
                 }
                 Key::Ctrl('r') => return Ok((NavigationAction::Refresh, lines_value)),
-                Key::Char('r') => {
-                    let output = Self::run_code(&self, lines_value);
-                    print!("\n");
-                    output.lines().for_each(|line| println!("\r{}", line));
+                Key::Char(c) if ('0'..='9').contains(&c) => {
+                    let mut log = Logger::new();
+                    let style_map_clone = style_map.clone(); // Clone the style_map for the new thread
+                    let c_num = (c as u8 - '0' as u8) as usize;
+                    thread::spawn(move || {
+                        let output = Self::run_code(c_num, style_map_clone)
+                            .expect("Could not run code block");
+                        log.success(format!("{}:", c_num));
+                        output.lines().for_each(|line| println!("\r{}", line));
+                        print!("\n");
+                    });
 
                     continue;
                 }
@@ -252,30 +263,14 @@ impl Project {
         return Ok((NavigationAction::None, lines_value));
     }
 
-    fn run_code(self: &Self, _lines: u32) -> String {
-        let mut log = Logger::new();
-
-        log.info("Enter the code block number to run (e.g. 1, 2, 3):");
-
-        // let mut input = String::new();
-        // let mut block_number: usize = 0;
-        let test_block_number: usize = 1;
-
-        // match std::io::stdin().read_line(&mut input) {
-        //     Ok(_) => {
-        //         block_number = input.trim().parse::<usize>()?;
-
-        //         let (lang, code) = prettify::get_code(block_number);
-        //         println!("Running code block of {}:\n {}...", lang, code);
-        //     }
-        //     Err(error) => println!("error: {error}"),
-        // }
-        let res = prettify::get_code(test_block_number)
+    fn run_code(
+        num: usize,
+        env_map: HashMap<String, String>,
+    ) -> std::result::Result<String, Box<dyn Error>> {
+        let res = prettify::get_code(num)
             .expect("\rCould not get code block. There is no code block with that number.");
-
         let (lang, code) = res;
-        let console_output = run_code(lang, code).expect("\rCould not run code block.");
-        console_output
+        run_code(lang, code, &env_map)
     }
 
     /// This clears the terminal.
