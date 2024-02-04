@@ -1,6 +1,7 @@
 extern crate lazy_static;
 use crate::utils::{calculate_length_of_longest_line, store_colors, strip_ansi_codes};
 
+use std::collections::BTreeMap;
 use std::sync::Mutex;
 use std::{collections::HashMap, str};
 
@@ -24,8 +25,19 @@ lazy_static! {
     /// This also stores the upper and lower bounds of the content, which is used for vertical alignment
     static ref STYLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
 
+
+    /// This is used to store the colors associated with each line of the content
+    /// Using a static variable to store the colors ensures that the the colors are cached and the code does not recompute the colors
     static ref PS: SyntaxSet = SyntaxSet::load_defaults_newlines();
     static ref TS: ThemeSet = ThemeSet::load_defaults();
+
+    /// This is used to store the codes in the file
+    /// The codes are stored in sequence of their appearance in the file
+    /// The codes are stored in the global CODES variable, which is a BtreeMap<String, String>
+    ///     where the key is the index of the order of appearance of the code and the value is a vetor of language and code
+    static ref CODES: Mutex<BTreeMap<usize, (String, String)>> = Mutex::new(BTreeMap::new());
+
+
 }
 
 /// This function is used to join the children of a particular mdast node
@@ -208,6 +220,14 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
         mdast::Node::Code(code) => {
             let language = code.lang.unwrap_or("plaintext".to_string());
             let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
+
+            // Store the code in the global CODES variable
+            let mut codes = CODES.lock().unwrap();
+
+            let last_index = codes.len();
+            codes.insert(last_index + 1, (language.clone(), code.value.to_string()));
+            drop(codes);
+
             let syntax_theme = styles
                 .get("syntax_theme")
                 .map(|s| s.as_str())
@@ -386,13 +406,8 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
     let max_length = lines_clone
         .iter()
         .map(|s| {
-            let leading_spaces = strip_ansi_codes(s)
-                .chars()
-                .take_while(|c| *c == ' ')
-                .count();
-
             let s = strip_ansi_codes(s).replace("̶", "");
-            s.chars().count() + leading_spaces
+            s.chars().count()
         })
         .max()
         .unwrap_or(0);
@@ -691,6 +706,16 @@ pub fn get_bounds() -> (u32, u32) {
     return (upper_bound, lower_bound);
 }
 
+pub fn get_code(index: usize) -> Result<(String, String), Box<dyn std::error::Error>> {
+    let codes = CODES.lock().unwrap();
+
+    if let Some(code) = codes.get(&index) {
+        return Ok((code.0.to_string(), code.1.to_string()));
+    }
+
+    Err(format!("Code with index {} not found", index).into())
+}
+
 /// This function is used to prettify the markdown text
 /// The markdown text is parsed using the markdown crate
 /// The parsed mdast tree is then visited and converted to a string
@@ -702,6 +727,11 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
     let mut global_styles = STYLES.lock().unwrap();
     *global_styles = map;
     drop(global_styles);
+
+    let mut codes = CODES.lock().unwrap();
+
+    *codes = BTreeMap::new();
+    drop(codes);
 
     let mut lines = md_text.lines();
     // let mut front_matter = Vec::new();
