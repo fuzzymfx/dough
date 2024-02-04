@@ -130,7 +130,7 @@ v2:
   - ~~Improve the performance of syntax highlighting. The current implementation is CPU intensive. Use a different library for syntax highlighting, or parallel threads to improve performance.~~
 - ~~Custom text alignment: A regex match for individual text alignment~~
   - Improve the alignment of segments of text.
-- Implement running code blocks on separate threads and displaying results in the current console.
+- ~~Implement running code blocks on separate threads and displaying results in the current console.~~
 
 ## Acknowledgements
 
