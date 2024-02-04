@@ -15,6 +15,7 @@ use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
 use lazy_static::lazy_static;
+use termion::clear;
 
 lazy_static! {
     /// Style map is used to store the styles associated with a particular markdown element
@@ -34,8 +35,8 @@ lazy_static! {
     /// This is used to store the codes in the file
     /// The codes are stored in sequence of their appearance in the file
     /// The codes are stored in the global CODES variable, which is a BtreeMap<String, String>
-    ///     where the key is the language of the code and the value is the code itself
-    static ref CODES: Mutex<BTreeMap<String, String>> = Mutex::new(BTreeMap::new());
+    ///     where the key is the index of the order of appearance of the code and the value is a vetor of language and code
+    static ref CODES: Mutex<BTreeMap<usize, (String, String)>> = Mutex::new(BTreeMap::new());
 
 
 }
@@ -223,7 +224,9 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
 
             // Store the code in the global CODES variable
             let mut codes = CODES.lock().unwrap();
-            codes.insert(language.clone(), code.value.to_string());
+
+            let last_index = codes.len();
+            codes.insert(last_index + 1, (language.clone(), code.value.to_string()));
             drop(codes);
 
             let syntax_highlighting = styles
@@ -686,17 +689,14 @@ pub fn get_bounds() -> (u32, u32) {
     return (upper_bound, lower_bound);
 }
 
-pub fn get_code(index: usize) -> (String, String) {
+pub fn get_code(index: usize) -> Result<(String, String), String> {
     let codes = CODES.lock().unwrap();
-    let code_map: BTreeMap<usize, (String, String)> = codes
-        .iter()
-        .enumerate()
-        .map(|(i, (lang, code))| (i, (lang.clone(), code.clone())))
-        .collect();
-    drop(codes);
 
-    let (language, code) = code_map.get(&index).unwrap();
-    return (language.to_string(), code.to_string());
+    if let Some(code) = codes.get(&index) {
+        return Ok((code.0.to_string(), code.1.to_string()));
+    }
+
+    Err(format!("Code with index {} not found", index))
 }
 
 /// This function is used to prettify the markdown text
@@ -710,6 +710,11 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
     let mut global_styles = STYLES.lock().unwrap();
     *global_styles = map;
     drop(global_styles);
+
+    let mut codes = CODES.lock().unwrap();
+
+    *codes = BTreeMap::new();
+    drop(codes);
 
     let mut lines = md_text.lines();
     // let mut front_matter = Vec::new();

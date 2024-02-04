@@ -236,7 +236,11 @@ impl Project {
                     return Ok((NavigationAction::ScrollDown, lines_value))
                 }
                 Key::Ctrl('r') => return Ok((NavigationAction::Refresh, lines_value)),
-                Key::Char('r') => return Self::run_code(&self, lines_value),
+                Key::Char('r') => {
+                    let output = Self::run_code(&self, lines_value);
+                    print!("{}", output);
+                    continue;
+                }
                 _ => continue,
             }
         }
@@ -246,19 +250,17 @@ impl Project {
         return Ok((NavigationAction::None, lines_value));
     }
 
-    fn run_code(
-        self: &Self,
-        lines: u32,
-    ) -> std::result::Result<(NavigationAction, u32), Box<dyn std::error::Error>> {
+    fn run_code(self: &Self, lines: u32) -> String {
         let mut log = Logger::new();
 
         log.info("Enter the code block number to run (e.g. 1, 2, 3):");
 
         let mut input = String::new();
+        let mut block_number: usize = 1;
 
         // match std::io::stdin().read_line(&mut input) {
         //     Ok(_) => {
-        //         let block_number = input.trim().parse::<usize>()?;
+        //         block_number = input.trim().parse::<usize>()?;
 
         //         let (lang, code) = prettify::get_code(block_number);
         //         println!("Running code block of {}:\n {}...", lang, code);
@@ -266,12 +268,13 @@ impl Project {
         //     Err(error) => println!("error: {error}"),
         // }
 
-        let block_number = 1;
+        let res = prettify::get_code(block_number)
+            .expect("Could not get code block. There is no code block with that number.");
 
-        let (lang, code) = prettify::get_code(block_number);
+        let (lang, code) = res;
 
         println!("Running code block of {}:\n {}...", lang, code);
-        return Ok((NavigationAction::None, lines));
+        return code;
     }
 
     /// This clears the terminal.
