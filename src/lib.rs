@@ -270,13 +270,6 @@ impl Project {
         //     }
         //     Err(error) => println!("error: {error}"),
         // }
-
-        // ℹ Enter the code block number to run (e.g. 1, 2, 3):
-
-        // Hello, world!
-
-        //                                                     Why am I getting a space infront of the response?
-
         let res = prettify::get_code(test_block_number)
             .expect("\rCould not get code block. There is no code block with that number.");
 
