@@ -208,21 +208,39 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
         mdast::Node::Code(code) => {
             let language = code.lang.unwrap_or("plaintext".to_string());
             let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
+            let syntax_theme = styles
+                .get("syntax_theme")
+                .map(|s| s.as_str())
+                .unwrap_or("base16-ocean.dark")
+                .to_string();
             let syntax_highlighting = styles
                 .get("syntax_highlighting")
                 .map(|s| s.as_str())
                 .unwrap_or("true");
 
+            let include_background_color: bool = match styles
+                .get("syntax_bg")
+                .map(|s| s.as_str())
+                .unwrap_or("true")
+            {
+                "true" => true,
+                _ => false,
+            };
+
             let mut result = String::from("```\n").replace("```", "");
             if syntax_highlighting == "true" {
-                let mut highlighted_code = syntax_highlighter(&language, code.value.to_string());
-                // add indentation and spacing to the highlighted code
+                let mut highlighted_code = syntax_highlighter(
+                    &language,
+                    code.value.to_string(),
+                    syntax_theme,
+                    include_background_color,
+                );
+
                 highlighted_code = highlighted_code
                     .lines()
-                    .map(|line| format!("    {}", line))
+                    .map(|line| format!("{}", line))
                     .collect::<Vec<String>>()
                     .join("\n");
-
                 result.push_str(&highlighted_code.color(color).to_string());
             } else {
                 result.push_str(&code.value.color(color).to_string());
@@ -367,7 +385,15 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
     // Calculate the length of the longest line
     let max_length = lines_clone
         .iter()
-        .map(|s| strip_ansi_codes(s).replace("̶", "").len())
+        .map(|s| {
+            let leading_spaces = strip_ansi_codes(s)
+                .chars()
+                .take_while(|c| *c == ' ')
+                .count();
+
+            let s = strip_ansi_codes(s).replace("̶", "");
+            s.chars().count() + leading_spaces
+        })
         .max()
         .unwrap_or(0);
 
@@ -377,13 +403,14 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
 
     for (i, line) in lines.iter().enumerate() {
         let original_color = match line_color_map.get(&i) {
-            Some(color) => color,
+            Some(_color) => "\x1B[0m",
             None => "\x1B[0m",
         };
         // Remove the strikethrough character from the line
         // These characters add extra length to the line
 
-        let free_line = line.replace("̶", "");
+        let mut free_line = line.replace("̶", "");
+        free_line = free_line.replace('\t', " ");
         // Calculate the number of spaces to be added to the end of the line based on the line free of strikethrough characters
         let padding_length = max_length - strip_ansi_codes(&free_line).chars().count();
         let padding = " ".repeat(padding_length);
@@ -465,11 +492,10 @@ pub fn align_horizontal(
     prettified: String,
     style_map: &HashMap<String, String>,
     width: u16,
-    text: &str,
     line_color_map: HashMap<usize, String>,
 ) -> String {
     let blank_chars;
-    let longest_line = calculate_length_of_longest_line(text.to_string());
+    let longest_line = calculate_length_of_longest_line(&prettified);
 
     if style_map.get("horizontal_alignment").unwrap() == "false" {
         blank_chars = 0;
@@ -514,8 +540,8 @@ pub fn align_horizontal(
 /// $[clr]$ -> center, left, right alignment respectively
 /// This is used for text alignment within the content
 
-pub fn align_custom(prettified: String, lines: &str) -> String {
-    let longest_line = calculate_length_of_longest_line(lines.to_string());
+pub fn align_custom(prettified: String) -> String {
+    let longest_line = calculate_length_of_longest_line(&prettified);
 
     let mut new_prettified = String::new();
 
@@ -575,11 +601,7 @@ pub fn align_custom(prettified: String, lines: &str) -> String {
 /// 3. vertical_alignment: true/false
 /// 4. terminal: warp/normal    
 
-pub fn align_content(
-    mut prettified: String,
-    style_map: &HashMap<String, String>,
-    lines: &str,
-) -> String {
+pub fn align_content(mut prettified: String, style_map: &HashMap<String, String>) -> String {
     let (_width, height) = termion::terminal_size().unwrap();
 
     let mut upper_bound = prettified.lines().count() as u32;
@@ -589,7 +611,7 @@ pub fn align_content(
 
     let mut line_color_map = store_colors(&content_lines);
 
-    prettified = align_custom(prettified, lines);
+    prettified = align_custom(prettified);
 
     if style_map.get("box").unwrap() == "true" {
         upper_bound += 4;
@@ -600,7 +622,7 @@ pub fn align_content(
         content_lines = prettified.lines().map(|s| s.to_string()).collect();
         line_color_map = store_colors(&content_lines);
 
-        prettified = align_horizontal(prettified, style_map, _width, lines, line_color_map);
+        prettified = align_horizontal(prettified, style_map, _width, line_color_map);
     }
 
     if style_map.get("vertical_alignment").unwrap() == "true" {
@@ -623,12 +645,12 @@ pub fn align_content(
     return prettified;
 }
 
-pub fn syntax_highlighter(language: &str, code_section: String) -> String {
+pub fn syntax_highlighter(language: &str, code_section: String, theme: String, bg: bool) -> String {
     // Load the syntaxes and themes
     let syntax = PS
         .find_syntax_by_extension(language)
         .unwrap_or(PS.find_syntax_plain_text());
-    let theme = &TS.themes["base16-ocean.dark"];
+    let theme = &TS.themes[&theme];
 
     // Create a highlighter
     let mut h = HighlightLines::new(syntax, theme);
@@ -637,7 +659,8 @@ pub fn syntax_highlighter(language: &str, code_section: String) -> String {
     let mut highlighted = String::new();
     for line in LinesWithEndings::from(&code_section) {
         let ranges: Vec<(Style, &str)> = h.highlight(line, &PS);
-        let escaped = syntect::util::as_24_bit_terminal_escaped(&ranges[..], true);
+        let mut escaped = syntect::util::as_24_bit_terminal_escaped(&ranges[..], bg);
+        escaped = escaped.replace("\t", "    ");
         highlighted.push_str(&escaped);
     }
 
@@ -710,5 +733,5 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
         }
     }
 
-    return Ok(align_content(prettified, style_map, &md_text));
+    return Ok(align_content(prettified, style_map));
 }
