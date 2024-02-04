@@ -386,13 +386,8 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
     let max_length = lines_clone
         .iter()
         .map(|s| {
-            let leading_spaces = strip_ansi_codes(s)
-                .chars()
-                .take_while(|c| *c == ' ')
-                .count();
-
             let s = strip_ansi_codes(s).replace("̶", "");
-            s.chars().count() + leading_spaces
+            s.chars().count()
         })
         .max()
         .unwrap_or(0);
