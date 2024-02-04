@@ -689,14 +689,14 @@ pub fn get_bounds() -> (u32, u32) {
     return (upper_bound, lower_bound);
 }
 
-pub fn get_code(index: usize) -> Result<(String, String), String> {
+pub fn get_code(index: usize) -> Result<(String, String), Box<dyn std::error::Error>> {
     let codes = CODES.lock().unwrap();
 
     if let Some(code) = codes.get(&index) {
         return Ok((code.0.to_string(), code.1.to_string()));
     }
 
-    Err(format!("Code with index {} not found", index))
+    Err(format!("Code with index {} not found", index).into())
 }
 
 /// This function is used to prettify the markdown text

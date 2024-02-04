@@ -1,7 +1,7 @@
 mod prettify;
 extern crate termion;
 mod utils;
-use crate::utils::remove_last_n_lines;
+use crate::utils::{remove_last_n_lines, run_code};
 
 use paris::Logger;
 use std::error::Error;
@@ -238,7 +238,9 @@ impl Project {
                 Key::Ctrl('r') => return Ok((NavigationAction::Refresh, lines_value)),
                 Key::Char('r') => {
                     let output = Self::run_code(&self, lines_value);
-                    print!("{}", output);
+                    print!("\n");
+                    output.lines().for_each(|line| println!("\r{}", line));
+
                     continue;
                 }
                 _ => continue,
@@ -250,13 +252,14 @@ impl Project {
         return Ok((NavigationAction::None, lines_value));
     }
 
-    fn run_code(self: &Self, lines: u32) -> String {
+    fn run_code(self: &Self, _lines: u32) -> String {
         let mut log = Logger::new();
 
         log.info("Enter the code block number to run (e.g. 1, 2, 3):");
 
-        let mut input = String::new();
-        let mut block_number: usize = 1;
+        // let mut input = String::new();
+        // let mut block_number: usize = 0;
+        let test_block_number: usize = 1;
 
         // match std::io::stdin().read_line(&mut input) {
         //     Ok(_) => {
@@ -268,13 +271,18 @@ impl Project {
         //     Err(error) => println!("error: {error}"),
         // }
 
-        let res = prettify::get_code(block_number)
-            .expect("Could not get code block. There is no code block with that number.");
+        // ℹ Enter the code block number to run (e.g. 1, 2, 3):
+
+        // Hello, world!
+
+        //                                                     Why am I getting a space infront of the response?
+
+        let res = prettify::get_code(test_block_number)
+            .expect("\rCould not get code block. There is no code block with that number.");
 
         let (lang, code) = res;
-
-        println!("Running code block of {}:\n {}...", lang, code);
-        return code;
+        let console_output = run_code(lang, code).expect("\rCould not run code block.");
+        console_output
     }
 
     /// This clears the terminal.
