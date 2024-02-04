@@ -397,8 +397,6 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
         .max()
         .unwrap_or(0);
 
-    print!("max_length: {:?}\n", max_length);
-
     // Create a horizontal border based on the length of the longest line
     let horizontal_border: String = "─".repeat(max_length + 4); // 2 for box corners and sides
     let mut boxed_content = format!("┌{}┐\n", strip_ansi_codes(&horizontal_border)); // top border
@@ -542,7 +540,7 @@ pub fn align_horizontal(
 /// $[clr]$ -> center, left, right alignment respectively
 /// This is used for text alignment within the content
 
-pub fn align_custom(prettified: String, lines: &str) -> String {
+pub fn align_custom(prettified: String) -> String {
     let longest_line = calculate_length_of_longest_line(&prettified);
 
     let mut new_prettified = String::new();
@@ -603,11 +601,7 @@ pub fn align_custom(prettified: String, lines: &str) -> String {
 /// 3. vertical_alignment: true/false
 /// 4. terminal: warp/normal    
 
-pub fn align_content(
-    mut prettified: String,
-    style_map: &HashMap<String, String>,
-    lines: &str,
-) -> String {
+pub fn align_content(mut prettified: String, style_map: &HashMap<String, String>) -> String {
     let (_width, height) = termion::terminal_size().unwrap();
 
     let mut upper_bound = prettified.lines().count() as u32;
@@ -617,7 +611,7 @@ pub fn align_content(
 
     let mut line_color_map = store_colors(&content_lines);
 
-    prettified = align_custom(prettified, lines);
+    prettified = align_custom(prettified);
 
     if style_map.get("box").unwrap() == "true" {
         upper_bound += 4;
@@ -739,5 +733,5 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
         }
     }
 
-    return Ok(align_content(prettified, style_map, &md_text));
+    return Ok(align_content(prettified, style_map));
 }
