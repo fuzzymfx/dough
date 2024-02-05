@@ -93,7 +93,6 @@ TODO:
 
 <img width="560" alt="syntax-highlighting" src="https://github.com/fuzzymfx/dough/assets/69160388/8b071096-adce-434c-8ff5-5204e6ca19b1">
 
-
 v1:
 
 - Rendering Engine
@@ -115,7 +114,7 @@ v2:
 
 - Improving the rendering engine:
   - ~~Add a refresh feature while rendering slides~~
-    - Hot Module Reload( FIX )
+    - Hot Module Reload( *auto* )
   - ~~Add support for rendering **nested syntax**~~
   - Add a support for maximum width and height of the terminal. Write a word wrapper.
   - Address the color storage issue for multiline elements, ensuring ANSI escape sequences are properly stripped: Refine color correction post-alignment for a seamless visual experience.
