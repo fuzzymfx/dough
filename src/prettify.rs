@@ -614,8 +614,6 @@ pub fn align_custom(prettified: String) -> String {
             }
             lines_iter.next();
 
-            print!("Block Lines: {:?}", block_lines);
-
             let mut aligned_block = String::new();
 
             for line in block_lines.iter().skip(1) {
