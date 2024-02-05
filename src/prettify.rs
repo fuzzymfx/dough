@@ -560,10 +560,22 @@ pub fn align_custom(prettified: String) -> String {
 
     let mut new_prettified = String::new();
 
-    for line in prettified.lines() {
+    let mut lines_iter = prettified.lines().peekable();
+
+    while let Some(line) = lines_iter.next() {
+        if line == "---" || line == "***" || line == "___" {
+            let mut new_line = String::from(line.replace("---", ""));
+            for _ in 0..longest_line {
+                new_line.push_str("-");
+            }
+            new_prettified.push_str(&new_line);
+        }
+
         let mut aligned_line = line.to_string();
-        let re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
-        if let Some(captures) = re.captures(&aligned_line) {
+        let line_re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
+        let block_re = regex::Regex::new(r"\$\[([clr])\]").unwrap();
+        let end_block_re = regex::Regex::new(r"\$\[e\]").unwrap();
+        if let Some(captures) = line_re.captures(&aligned_line) {
             let alignment = captures.get(1).unwrap().as_str();
 
             let new_line = aligned_line.replace(&captures[0], "");
@@ -588,16 +600,49 @@ pub fn align_custom(prettified: String) -> String {
                     aligned_line = aligned_line.replace(&captures[0], "");
                 }
             }
-        }
+            new_prettified.push_str(&aligned_line);
+        } else if let Some(captures) = block_re.captures(&aligned_line) {
+            let alignment = captures.get(1).unwrap().as_str();
 
-        // handle rendering thematic breaks
+            let mut block_lines: Vec<&str> = vec![line];
 
-        if line == "---" || line == "***" || line == "___" {
-            let mut new_line = String::from(line.replace("---", ""));
-            for _ in 0..longest_line {
-                new_line.push_str("-");
+            while let Some(&next_line) = lines_iter.peek() {
+                if end_block_re.is_match(next_line) {
+                    break;
+                }
+                block_lines.push(lines_iter.next().unwrap());
             }
-            new_prettified.push_str(&new_line);
+            lines_iter.next();
+
+            print!("Block Lines: {:?}", block_lines);
+
+            let mut aligned_block = String::new();
+
+            for line in block_lines.iter().skip(1) {
+                let line_length = strip_ansi_codes(&line).len();
+                match alignment {
+                    "c" => {
+                        let spaces = (longest_line - line_length) / 2;
+                        let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+                        new_line = new_line.replace(&captures[0], "");
+                        aligned_block.push_str(&new_line);
+                    }
+                    "r" => {
+                        let spaces = longest_line - line_length;
+                        let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+                        new_line = new_line.replace(&captures[0], "");
+                        aligned_block.push_str(&new_line);
+                    }
+                    _ => {
+                        // Do nothing for "l" alignment
+                        let new_line = line.replace(&captures[0], "");
+                        aligned_block.push_str(&new_line);
+                    }
+                }
+
+                aligned_block.push('\n');
+            }
+            new_prettified.push_str(&aligned_block);
         } else {
             new_prettified.push_str(&aligned_line);
         }
