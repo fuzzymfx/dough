@@ -245,7 +245,7 @@ impl Project {
                     let style_map_clone = style_map.clone(); // Clone the style_map for the new thread
                     let c_num = (c as u8 - '0' as u8) as usize;
                     thread::Builder::new()
-                        .name("ramen:".to_string())
+                        .name("ramen".to_string())
                         .spawn(move || {
                             let output = Self::run_code(c_num, style_map_clone)
                                 .expect("Could not run code block");
