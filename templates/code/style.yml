@@ -38,6 +38,7 @@ horizontal_alignment: true
 
 syntax_highlighting: true
 synatx_theme: base16-ocean.dark
+#themes:[base16-ocean.dark,base16-eighties.dark,base16-mocha.dark,base16-ocean.light, Solarized (dark) and Solarized (light)]
 synatx_bg: true
 
 # terminals vary in rendering. Currently, the following terminals are supported:
