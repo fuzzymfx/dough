@@ -561,9 +561,18 @@ pub fn align_custom(prettified: String) -> String {
     let mut new_prettified = String::new();
 
     for line in prettified.lines() {
+        if line == "---" || line == "***" || line == "___" {
+            let mut new_line = String::from(line.replace("---", ""));
+            for _ in 0..longest_line {
+                new_line.push_str("-");
+            }
+            new_prettified.push_str(&new_line);
+        }
+
         let mut aligned_line = line.to_string();
-        let re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
-        if let Some(captures) = re.captures(&aligned_line) {
+        let line_re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
+        let block_re = regex::Regex::new(r"\$\[([clr])\]").unwrap();
+        if let Some(captures) = line_re.captures(&aligned_line) {
             let alignment = captures.get(1).unwrap().as_str();
 
             let new_line = aligned_line.replace(&captures[0], "");
@@ -588,16 +597,48 @@ pub fn align_custom(prettified: String) -> String {
                     aligned_line = aligned_line.replace(&captures[0], "");
                 }
             }
-        }
+            new_prettified.push_str(&aligned_line);
+        } else if let Some(captures) = block_re.captures(&aligned_line) {
+            let alignment = captures.get(1).unwrap().as_str();
 
-        // handle rendering thematic breaks
+            // let block_lines: Vec<&str> = prettified
+            //     .lines()
+            //     .skip_while(|l| l != &line)
+            //     .take_while(|l| l != &"```")
+            //     .collect(); --> incorrect
 
-        if line == "---" || line == "***" || line == "___" {
-            let mut new_line = String::from(line.replace("---", ""));
-            for _ in 0..longest_line {
-                new_line.push_str("-");
-            }
-            new_prettified.push_str(&new_line);
+            // block lines are the lines between the current line and the next line when the regex again matches indicating the start and the end of the block of lines
+
+            // print!("{:?}\n", block_lines);
+
+            // for each line, align the text based on the alignment flag
+            // let mut aligned_block = String::new();
+
+            // for line in block_lines.iter().skip(1) {
+            //     let line_length = strip_ansi_codes(&line).len();
+            //     match alignment {
+            //         "c" => {
+            //             print!("HERE ");
+            //             let spaces = (longest_line - line_length) / 2;
+            //             let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+            //             new_line = new_line.replace(&captures[0], "");
+            //             aligned_block.push_str(&new_line);
+            //         }
+            //         "r" => {
+            //             let spaces = longest_line - line_length;
+            //             let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+            //             new_line = new_line.replace(&captures[0], "");
+            //             aligned_block.push_str(&new_line);
+            //         }
+            //         _ => {
+            //             // Do nothing for "l" alignment
+            //             let new_line = line.replace(&captures[0], "");
+            //             aligned_block.push_str(&new_line);
+            //         }
+            //     }
+            //     aligned_block.push('\n');
+            // }
+            // new_prettified.push_str(&aligned_block);
         } else {
             new_prettified.push_str(&aligned_line);
         }
