@@ -45,3 +45,20 @@ synatx_bg: true
 #   - default Mac OS terminal
 
 terminal: warp
+
+-runtime_map:
+  python: python3
+  sh: bash
+  bash: bash
+  javascript: node
+  typescript: node
+  ts: tsc
+  c: gcc
+  cpp: g++
+  java: javac
+  go: go run
+  rust: cargo run
+  ruby: ruby
+  php: php
+  swift: swift
+  kotlin: kotlinc

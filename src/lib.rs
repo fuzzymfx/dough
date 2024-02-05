@@ -244,14 +244,16 @@ impl Project {
                     let mut log = Logger::new();
                     let style_map_clone = style_map.clone(); // Clone the style_map for the new thread
                     let c_num = (c as u8 - '0' as u8) as usize;
-                    thread::spawn(move || {
-                        let output = Self::run_code(c_num, style_map_clone)
-                            .expect("Could not run code block");
-                        log.success(format!("{}:", c_num));
-                        output.lines().for_each(|line| println!("\r{}", line));
-                        print!("\n");
-                    });
-
+                    thread::Builder::new()
+                        .name("ramen:".to_string())
+                        .spawn(move || {
+                            let output = Self::run_code(c_num, style_map_clone)
+                                .expect("Could not run code block");
+                            log.success(format!("{}:", c_num));
+                            output.lines().for_each(|line| println!("\r{}", line));
+                            print!("\n");
+                        })
+                        .expect("Failed to spawn thread");
                     continue;
                 }
                 _ => continue,
@@ -267,8 +269,7 @@ impl Project {
         num: usize,
         env_map: HashMap<String, String>,
     ) -> std::result::Result<String, Box<dyn Error>> {
-        let res = prettify::get_code(num)
-            .expect("\rCould not get code block. There is no code block with that number.");
+        let res = prettify::get_code(num).expect("\rFailed");
         let (lang, code) = res;
         run_code(lang, code, &env_map)
     }
