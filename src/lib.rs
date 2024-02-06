@@ -65,17 +65,24 @@ impl Project {
     /// A new project instance.
 
     pub fn new(name: &str, workdir: &str, template: &str) -> Project {
+        // The current implementation is commented out because it is not used. It is left here for future use.
+        // The active project directory is the current working directory.
+
+        //```(INACTIVE CODE)
+
         // The project directory is located at `./projects`. It is the parent directory of all the projects.
         // If the directory does not exist, create it.
-        let project_dir = workdir.to_owned() + "/projects";
+        // let project_dir = workdir.to_owned() + "/projects";
 
-        if !std::path::Path::new(&project_dir).exists() {
-            fs::create_dir(&project_dir).expect("Could not create projects directory");
-        }
+        // if !std::path::Path::new(&project_dir).exists() {
+        //     fs::create_dir(&project_dir).expect("Could not create projects directory");
+        // }
+
+        //```
 
         // Use the template provided to copy the template files into the project directory.
         Project {
-            fs_path: std::path::Path::new(&project_dir).join(name).to_path_buf(),
+            fs_path: std::path::Path::new(&workdir).join(name).to_path_buf(),
             template: std::path::Path::new(workdir)
                 .join("templates")
                 .join(template)
