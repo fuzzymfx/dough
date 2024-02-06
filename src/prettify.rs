@@ -241,9 +241,9 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
             let include_background_color: bool = match styles
                 .get("syntax_bg")
                 .map(|s| s.as_str())
-                .unwrap_or("true")
+                .unwrap_or("false")
             {
-                "true" => true,
+                "true" | "True" => true,
                 _ => false,
             };
 

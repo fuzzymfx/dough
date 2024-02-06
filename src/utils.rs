@@ -121,7 +121,7 @@ horizontal_alignment: true
 
 syntax_highlighting: true
 synatx_theme: base16-ocean.dark
-synatx_bg: true
+syntax_bg: true
 
 # terminals vary in rendering. Currently, the following terminals are supported:
 #   - warp
