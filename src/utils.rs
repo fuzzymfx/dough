@@ -1,3 +1,4 @@
+use paris::Logger;
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -72,4 +73,72 @@ pub fn remove_last_n_lines(text: &str, n: u32) -> String {
         }
     }
     return lines.join("\n");
+}
+
+pub fn create_style(project: std::path::PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let mut log = Logger::new();
+    let style_path = project.join("style.yml");
+    let verify_path = style_path.clone();
+
+    if !style_path.exists() {
+        std::fs::write(style_path, "
+# This file contains the default style settings for the terminal markdown renderer.
+# Markdown styles
+h1: red
+h2: yellow
+h3: green
+h4: cyan
+h5: blue
+h6: purple
+code: black on white
+blockquote: black on white
+ordered_list_bullet: yellow
+unordered_list_bullet: yellow
+ordered_list: white
+unordered_list: white
+link_text: black
+link_url: blue
+thematic_break: white on black
+
+# Terminal styles
+
+# clear will clear the terminal before rendering, you would need to scroll down to render each line
+clear: false
+
+box: true
+box_color: black on white
+
+# vertical_alignment will vertically align the text to the middle of the terminal
+vertical_alignment: true
+
+# horizontal_alignment will horizontally align the text to the middle of the terminal
+horizontal_alignment: true
+
+# syntax_highlighting will highlight the code syntax
+# this works well with the warp terminal, but not with the default Mac OS terminal
+# syantax_highlighting works well, but at times the rendering might not be perfect with box enabled. We suggest you to try with and without box to see which one works best for you. Alos, consider manually adjusting the indentation of the code blocks if needed.
+# chekout https://github.com/trishume/syntect for more information on themes
+
+syntax_highlighting: true
+synatx_theme: base16-ocean.dark
+synatx_bg: true
+
+# terminals vary in rendering. Currently, the following terminals are supported:
+#   - warp
+#   - default Mac OS terminal
+
+terminal: warp")?;
+        if verify_path.exists() {
+            log.info("fin style.yml");
+            Ok(())
+        } else {
+            Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Failed to create style.yml",
+            )))
+        }
+    } else {
+        log.warn("style.yml exists. Skipped.");
+        Ok(())
+    }
 }

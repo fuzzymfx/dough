@@ -310,11 +310,23 @@ impl Project {
     /// A result indicating whether the project was presented successfully or not.
 
     pub fn present_term(self: &Self) -> std::result::Result<(), Box<dyn Error>> {
+        let mut log = Logger::new();
         // The render variable is used to determine whether to render a new slide or not.
         let mut render = true;
         let mut current_slide = 1;
         // The lines variable is used to determine the number of lines to be rendered.
         let mut lines: u32 = 0;
+
+        // Check if the project directory has style.yml file
+        let style_path = self.fs_path.join("style.yml");
+        if !style_path.exists() {
+            log.warn("Style config not found. Using default styles");
+            let res = utils::create_style(self.fs_path.clone());
+            match res {
+                Ok(_) => {}
+                Err(e) => println!("Error creating style file: {}", e),
+            }
+        }
 
         // The loop is used to present the slides one by one.
         // The loop is exited when the user exits the presentation.
