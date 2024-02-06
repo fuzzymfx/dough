@@ -161,7 +161,8 @@ impl Project {
         file_contents: &str,
         style_map: &HashMap<String, String>,
         highlight: bool,
-        lines: &u32,
+        render: bool,
+        lines: &mut u32,
         current_slide: u32,
     ) -> std::result::Result<(NavigationAction, u32), Box<dyn Error>> {
         // Used to check whether all the lines will be rendered or will it be rendered one by one.
@@ -173,49 +174,60 @@ impl Project {
             clear = true;
         }
         let slide;
+        let mut lines_value = *lines;
 
         if highlight {
-            slide = prettify::prettify(&file_contents.to_string(), &style_map, *lines)?;
-        } else {
-            slide = prettify::prettify(&remove_last_n_lines(file_contents, *lines), &style_map, 0)?;
-        }
+            slide = prettify::prettify(&file_contents.to_string(), &style_map, lines_value)?;
 
-        let lines_value = *lines;
-
-        // The range of scroll is determined by the upper and lower bounds.
-        // The code handles for different terminal types.
-        // Lines value is used to determine the number of lines to be rendered.
-        // Scrolling can be done using the up and down arrow keys, or the j and k keys.
-        // It controlls the number of lines to be rendered.
-
-        // return Err(Box::new(DoughError("Could not parse markdown".to_string())));
-
-        if clear {
-            let lines_value = slide.lines().count() as u32;
-            print!("{}", remove_last_n_lines(&slide, lines_value));
-        } else {
+            if file_contents.lines().count() as u32 <= lines_value {
+                lines_value = file_contents.lines().count() as u32;
+            }
             print!("{}", slide);
+        } else {
+            slide = prettify::prettify(&file_contents.to_string(), &style_map, 0)?;
+            // The upper and lower bounds are used to determine the number of lines to be rendered.
+            let (upper_bound, lower_bound) = prettify::get_bounds();
+
+            // The range of scroll is determined by the upper and lower bounds.
+            // The code handles for different terminal types.
+            // Lines value is used to determine the number of lines to be rendered.
+            // Scrolling can be done using the up and down arrow keys, or the j and k keys.
+            // It controlls the number of lines to be rendered.
+
+            if upper_bound <= lines_value {
+                lines_value = upper_bound;
+            } else if lower_bound > 2 && lower_bound - 2 > lines_value {
+                lines_value = lower_bound - 2;
+            }
+
+            if render {
+                if clear {
+                    lines_value = slide.lines().count() as u32;
+                    print!("{}", remove_last_n_lines(&slide, lines_value));
+                } else {
+                    print!("{}", slide);
+                }
+            } else {
+                print!("{}", remove_last_n_lines(&slide, lines_value));
+            }
         }
 
-        // match style_map.get("progress").unwrap().as_str() {
-        //     "true" => {
-        //         print!("\r");
-        //         log.info(format!(
-        //             "[{}/{}]",
-        //             current_slide,
-        //             fs::read_dir(&self.fs_path)?.count()
-        //         ));
-        //     }
-        //     _ => {}
-        // }
+        match style_map.get("progress").unwrap().as_str() {
+            "true" => {
+                print!("\r");
+                log.info(format!(
+                    "[{}/{}]",
+                    current_slide,
+                    fs::read_dir(&self.fs_path)?.count()
+                ));
+            }
+            _ => {}
+        }
 
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode()?;
 
-        // match highlight {
-        //     true => log.info(format!("(t) highlight")),
-        //     false => log.info(format!("(t) scroll")),
-        // };
+        println!("{}", lines);
 
         stdout.flush()?;
 
@@ -315,8 +327,10 @@ impl Project {
 
     pub fn present_term(self: &Self) -> std::result::Result<(), Box<dyn Error>> {
         let mut log = Logger::new();
-        // The render variable is used to determine whether to render a new slide or not.
+        // The highlight variable is used to determine whether to highlight the code or scroll.
         let mut highlight = true;
+        // The render variable is used to determine whether to render a new slide or not. Used for scrolling.
+        let mut render = true;
         let mut current_slide = 1;
         // The lines variable is used to determine the number of lines to be rendered.
         let mut lines: u32 = 2;
@@ -381,35 +395,51 @@ impl Project {
                 &contents,
                 &style_map,
                 highlight,
-                &lines,
+                render,
+                &mut lines,
                 current_slide,
             )? {
                 (NavigationAction::Next, _new_lines_value) => {
+                    render = true;
                     current_slide += 1;
                     lines = 2;
                 }
                 (NavigationAction::Previous, _new_lines_value) => {
+                    render = true;
                     if current_slide > 1 {
                         current_slide -= 1;
                     }
                     lines = 2;
                 }
                 (NavigationAction::ScrollUp, new_lines_value) => {
+                    render = false;
                     lines = new_lines_value;
-                    if lines < contents.lines().count() as u32 {
-                        lines += 1;
+                    if highlight {
+                        if lines < contents.lines().count() as u32 {
+                            lines += 1;
+                        }
+                    } else {
+                        lines += 1
                     }
                 }
                 (NavigationAction::ScrollDown, new_lines_value) => {
+                    render = false;
                     lines = new_lines_value;
                     if lines > 2 {
                         lines -= 1;
                     }
                 }
-                (NavigationAction::ToggleHighlight, _new_lines_value) => {
+                (NavigationAction::ToggleHighlight, new_lines_value) => {
+                    render = true;
+                    if highlight {
+                        lines = 2;
+                    } else {
+                        lines = new_lines_value;
+                    }
                     highlight = !highlight;
                 }
                 (NavigationAction::Refresh, _new_lines_value) => {
+                    render = true;
                     lines = 2;
                 }
                 (NavigationAction::Exit, _new_lines_value) => {

@@ -656,7 +656,7 @@ pub fn align_content(mut prettified: String, style_map: &HashMap<String, String>
     prettified = align_custom(prettified);
 
     if style_map.get("box").unwrap() == "true" {
-        upper_bound += 4;
+        upper_bound += 2;
         prettified = draw_box(&prettified, &line_color_map);
     }
 
@@ -707,6 +707,30 @@ pub fn syntax_highlighter(language: &str, code_section: String, theme: String, b
     }
 
     highlighted
+}
+
+/// This is used to get the upper and lower bounds of the content
+/// The upper and lower bounds are used for vertical alignment
+/// The upper bound is the number of blank lines at the beginning of the content
+/// The lower bound is the number of blank lines at the end of the content
+/// The bounds are stored in the global STYLES variable and are used fort scrolling
+pub fn get_bounds() -> (u32, u32) {
+    let global_styles = STYLES.lock().unwrap();
+
+    let upper_bound = global_styles
+        .get("upper_bound")
+        .unwrap()
+        .parse::<u32>()
+        .unwrap();
+    let lower_bound = global_styles
+        .get("lower_bound")
+        .unwrap()
+        .parse::<u32>()
+        .unwrap();
+
+    drop(global_styles);
+
+    return (upper_bound, lower_bound);
 }
 
 pub fn get_code(index: usize) -> Result<(String, String), Box<dyn std::error::Error>> {
