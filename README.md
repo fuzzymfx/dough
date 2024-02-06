@@ -43,9 +43,19 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 ### Usage
 
-Dough provides two main subcommands: new and present.
+**Without templates**
+
+Create a new dir and create your presentations using markdown:
+
+```bash
+dough present <project-name> [directory name]
+```
+
+Dough provides two main subcommands: new and present. 
 
 #### Creating a New Project
+
+**With templates**
 
 ```bash
 dough new <project-name> [--template <template-name>]
@@ -60,6 +70,11 @@ Example:
 ```bash
 dough new my_presentation --template fancy_template
 ```
+
+Currently, there are three templates:
+- `default`
+- `code`
+- `light`
 
 You can add new `templates` under the templates folder. Each template is a folder containing a `template.md` file that contains the template's Markdown code.
 <!-- You can also add a `template.css` file to add custom CSS styling to the template. -->
@@ -80,10 +95,28 @@ dough present my_presentation --mode html
 
 #### Navigating through the Presentation
 
+- `t` :
+  - `highlighting` mode
+  - `scrolling` mode
+- `q`, `Esc`, or `ctrl + c` to quit the presentation.
+- `ctrl + r` to refresh the presentation.
+- `l` or `right arrow` to move to the next slide.
+- `h` or `left arrow` to move to the previous slide.
+- `j` or `down arrow` to move to the next line.
+- `k` or `up arrow` to move to the previous line.
+
+The `t` key is used to toggle between **highlighting** and **scrolling** modes. In highlighting mode, you can use the arrow keys to navigate between slides. In scrolling mode, you can use the arrow keys to scroll through the content of the current slide.
+
 You can use arrow keys to navigate: right and left arrows to move between slides, and up and down arrows to move between lines.
 Vim keybindings are also supported: `h` and `l` to move between slides, and `j` and `k` to move between lines.
 The letters are case-insensitive.
-`q` to quit the presentation.
+
+#### Running Code Blocks
+
+Dough supports running code blocks in the terminal. The code blocks are internally ordered in the order they appear in the markdown file. The code blocks are run in a separate thread, and the results are displayed in the terminal.
+
+- `n`: runs the `n`th code block. and outputs the result in the terminal.
+
 
 ## Contributing
 
