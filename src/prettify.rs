@@ -709,30 +709,6 @@ pub fn syntax_highlighter(language: &str, code_section: String, theme: String, b
     highlighted
 }
 
-/// This is used to get the upper and lower bounds of the content
-/// The upper and lower bounds are used for vertical alignment
-/// The upper bound is the number of blank lines at the beginning of the content
-/// The lower bound is the number of blank lines at the end of the content
-/// The bounds are stored in the global STYLES variable and are used fort scrolling
-pub fn get_bounds() -> (u32, u32) {
-    let global_styles = STYLES.lock().unwrap();
-
-    let upper_bound = global_styles
-        .get("upper_bound")
-        .unwrap()
-        .parse::<u32>()
-        .unwrap();
-    let lower_bound = global_styles
-        .get("lower_bound")
-        .unwrap()
-        .parse::<u32>()
-        .unwrap();
-
-    drop(global_styles);
-
-    return (upper_bound, lower_bound);
-}
-
 pub fn get_code(index: usize) -> Result<(String, String), Box<dyn std::error::Error>> {
     let codes = CODES.lock().unwrap();
 
@@ -749,7 +725,11 @@ pub fn get_code(index: usize) -> Result<(String, String), Box<dyn std::error::Er
 /// The string is then decorated with the appropriate styles
 /// The styles are fetched from the global STYLES variable
 
-pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<String, String> {
+pub fn prettify(
+    md_text: &str,
+    style_map: &HashMap<String, String>,
+    highlight_line_num: u32,
+) -> Result<String, Box<dyn std::error::Error>> {
     let map = style_map.clone();
     let mut global_styles = STYLES.lock().unwrap();
     *global_styles = map;
@@ -781,7 +761,7 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
     let mut prettified = String::new();
 
     match parsed {
-        Err(err) => return Err(format!("Could not prettify markdown, error: {}", err)),
+        Err(err) => return Err(format!("Error parsing markdown: {}", err).into()),
         Ok(node) => {
             let result = visit_md_node(node, 0);
             if let Some(text) = result {
@@ -789,6 +769,18 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
             }
         }
     }
+
+    //highlight the line number from the end of the content
+    let mut lines: Vec<String> = prettified.lines().map(|line| line.to_string()).collect();
+    if lines.len() > highlight_line_num as usize {
+        let line_num = lines.len() as u32 - highlight_line_num;
+        if line_num < lines.len() as u32 {
+            let line = lines.get_mut(line_num as usize).unwrap();
+            *line = line.on_white().black().to_string();
+        }
+    }
+
+    prettified = lines.join("\n");
 
     return Ok(align_content(prettified, style_map));
 }

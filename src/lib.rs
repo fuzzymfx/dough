@@ -3,7 +3,7 @@ extern crate termion;
 mod ramen;
 mod utils;
 use crate::ramen::run_code;
-use crate::utils::remove_last_n_lines;
+use crate::utils::{remove_comments, remove_last_n_lines};
 
 use std::error::Error;
 use std::fmt;
@@ -28,6 +28,7 @@ enum NavigationAction {
     ScrollUp,
     ScrollDown,
     Refresh,
+    ToggleHighlight,
 }
 
 // Define a struct to hold project information.
@@ -159,23 +160,27 @@ impl Project {
         self: &Self,
         file_contents: &str,
         style_map: &HashMap<String, String>,
-        render: bool,
+        highlight: bool,
         lines: &u32,
         current_slide: u32,
     ) -> std::result::Result<(NavigationAction, u32), Box<dyn Error>> {
         // Used to check whether all the lines will be rendered or will it be rendered one by one.
         let mut clear: bool = false;
 
+        let mut log = Logger::new();
+
         if style_map.get("clear").unwrap() == "true" {
             clear = true;
         }
+        let slide;
 
-        // The slide is styled using the prettify module.
-        let slide = prettify::prettify(file_contents, &style_map)?;
-        // The upper and lower bounds are used to determine the number of lines to be rendered.
-        let (upper_bound, lower_bound) = prettify::get_bounds();
+        if highlight {
+            slide = prettify::prettify(&file_contents.to_string(), &style_map, *lines)?;
+        } else {
+            slide = prettify::prettify(&remove_last_n_lines(file_contents, *lines), &style_map, 0)?;
+        }
 
-        let mut lines_value = *lines;
+        let lines_value = *lines;
 
         // The range of scroll is determined by the upper and lower bounds.
         // The code handles for different terminal types.
@@ -183,25 +188,15 @@ impl Project {
         // Scrolling can be done using the up and down arrow keys, or the j and k keys.
         // It controlls the number of lines to be rendered.
 
-        if upper_bound <= lines_value {
-            lines_value = upper_bound;
-        } else if lower_bound > 2 && lower_bound - 2 > lines_value {
-            lines_value = lower_bound - 2;
+        // return Err(Box::new(DoughError("Could not parse markdown".to_string())));
+
+        if clear {
+            let lines_value = slide.lines().count() as u32;
+            print!("{}", remove_last_n_lines(&slide, lines_value));
+        } else {
+            print!("{}", slide);
         }
 
-        // render is used to determine whether to render a new slide or not.
-        // if render is false, the slide is being scrolled.
-        if render {
-            if clear {
-                lines_value = slide.lines().count() as u32;
-                print!("{}", remove_last_n_lines(&slide, lines_value));
-            } else {
-                print!("{}", slide);
-            }
-        } else {
-            print!("{}", remove_last_n_lines(&slide, lines_value));
-        }
-        // let mut log = Logger::new();
         // match style_map.get("progress").unwrap().as_str() {
         //     "true" => {
         //         print!("\r");
@@ -216,9 +211,14 @@ impl Project {
 
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode()?;
-        if render {
-            stdout.flush()?;
-        }
+
+        // match highlight {
+        //     true => log.info(format!("(t) highlight")),
+        //     false => log.info(format!("(t) scroll")),
+        // };
+
+        stdout.flush()?;
+
         // The navigation actions are handled here.
         // The navigation actions are:
         // 1. Next - Move to the next slide.
@@ -249,6 +249,7 @@ impl Project {
                 Key::Down | Key::Char('j') | Key::Char('J') => {
                     return Ok((NavigationAction::ScrollDown, lines_value))
                 }
+                Key::Char('t') => return Ok((NavigationAction::ToggleHighlight, lines_value)),
                 Key::Ctrl('r') => return Ok((NavigationAction::Refresh, lines_value)),
                 Key::Char(c) if ('0'..='9').contains(&c) => {
                     let mut log = Logger::new();
@@ -315,10 +316,10 @@ impl Project {
     pub fn present_term(self: &Self) -> std::result::Result<(), Box<dyn Error>> {
         let mut log = Logger::new();
         // The render variable is used to determine whether to render a new slide or not.
-        let mut render = true;
+        let mut highlight = true;
         let mut current_slide = 1;
         // The lines variable is used to determine the number of lines to be rendered.
-        let mut lines: u32 = 0;
+        let mut lines: u32 = 2;
 
         // Check if the project directory has style.yml file
         let style_path = self.fs_path.join("style.yml");
@@ -354,7 +355,7 @@ impl Project {
             }
 
             let file_contents = fs::read_to_string(&file_path)?;
-            let contents = file_contents.clone();
+            let contents = remove_comments(&file_contents);
 
             // The style map is used to describe the style of the slides.
             let style_content = fs::read_to_string(self.fs_path.join("style.yml"))?;
@@ -375,38 +376,41 @@ impl Project {
             // Next and previous move to the next and previous slides respectively.
             // Exit exits the presentation.
 
-            match Self::render_term(self, &contents, &style_map, render, &lines, current_slide)? {
+            match Self::render_term(
+                self,
+                &contents,
+                &style_map,
+                highlight,
+                &lines,
+                current_slide,
+            )? {
                 (NavigationAction::Next, _new_lines_value) => {
-                    render = true;
                     current_slide += 1;
-                    lines = 0;
+                    lines = 2;
                 }
                 (NavigationAction::Previous, _new_lines_value) => {
-                    render = true;
                     if current_slide > 1 {
                         current_slide -= 1;
                     }
-                    lines = 0;
+                    lines = 2;
                 }
                 (NavigationAction::ScrollUp, new_lines_value) => {
-                    render = false;
-
                     lines = new_lines_value;
-                    lines += 1;
-
-                    // update contents here accordingly: check contents and file_contents and update accordingly
+                    if lines < contents.lines().count() as u32 {
+                        lines += 1;
+                    }
                 }
                 (NavigationAction::ScrollDown, new_lines_value) => {
-                    render = false;
                     lines = new_lines_value;
-                    if lines > 0 {
+                    if lines > 2 {
                         lines -= 1;
                     }
-
-                    // update contents here accordingly: check contents and file_contents and update accordingly
+                }
+                (NavigationAction::ToggleHighlight, _new_lines_value) => {
+                    highlight = !highlight;
                 }
                 (NavigationAction::Refresh, _new_lines_value) => {
-                    render = true;
+                    lines = 2;
                 }
                 (NavigationAction::Exit, _new_lines_value) => {
                     exit(0);

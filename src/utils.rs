@@ -75,6 +75,12 @@ pub fn remove_last_n_lines(text: &str, n: u32) -> String {
     return lines.join("\n");
 }
 
+pub fn remove_comments(text: &str) -> String {
+    let re = Regex::new(r"(?s)<!--.*?-->").unwrap();
+    let result = re.replace_all(text, "");
+    result.to_string()
+}
+
 pub fn create_style(project: std::path::PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let mut log = Logger::new();
     let style_path = project.join("style.yml");
