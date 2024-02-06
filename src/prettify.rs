@@ -221,7 +221,9 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
             let language = code.lang.unwrap_or("plaintext".to_string());
             let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
 
-            // Store the code in the global CODES variable
+            // Store the codes in the file in the global CODES variable
+            // The codes are stored in the order of their appearance in the file
+
             let mut codes = CODES.lock().unwrap();
 
             let last_index = codes.len();
@@ -732,6 +734,10 @@ pub fn get_bounds() -> (u32, u32) {
 
     return (upper_bound, lower_bound);
 }
+
+/// This function is used to get the code from the global CODES variable
+/// The index is used to fetch the code from the global CODES variable
+/// The code is returned as a tuple of language and code
 
 pub fn get_code(index: usize) -> Result<(String, String), Box<dyn std::error::Error>> {
     let codes = CODES.lock().unwrap();
