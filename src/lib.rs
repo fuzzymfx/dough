@@ -161,6 +161,7 @@ impl Project {
         style_map: &HashMap<String, String>,
         render: bool,
         lines: &u32,
+        current_slide: u32,
     ) -> std::result::Result<(NavigationAction, u32), Box<dyn Error>> {
         // Used to check whether all the lines will be rendered or will it be rendered one by one.
         let mut clear: bool = false;
@@ -182,20 +183,10 @@ impl Project {
         // Scrolling can be done using the up and down arrow keys, or the j and k keys.
         // It controlls the number of lines to be rendered.
 
-        if let Some(terminal_style) = style_map.get("terminal") {
-            if terminal_style == "warp" {
-                if upper_bound < lines_value {
-                    lines_value = upper_bound;
-                } else if lower_bound > 2 && lower_bound - 2 > lines_value {
-                    lines_value = lower_bound - 2;
-                }
-            } else {
-                if upper_bound < lines_value {
-                    lines_value = upper_bound;
-                } else if lower_bound > lines_value {
-                    lines_value = lower_bound;
-                }
-            }
+        if upper_bound <= lines_value {
+            lines_value = upper_bound;
+        } else if lower_bound > 2 && lower_bound - 2 > lines_value {
+            lines_value = lower_bound - 2;
         }
 
         // render is used to determine whether to render a new slide or not.
@@ -210,6 +201,18 @@ impl Project {
         } else {
             print!("{}", remove_last_n_lines(&slide, lines_value));
         }
+        // let mut log = Logger::new();
+        // match style_map.get("progress").unwrap().as_str() {
+        //     "true" => {
+        //         print!("\r");
+        //         log.info(format!(
+        //             "[{}/{}]",
+        //             current_slide,
+        //             fs::read_dir(&self.fs_path)?.count()
+        //         ));
+        //     }
+        //     _ => {}
+        // }
 
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode()?;
@@ -350,7 +353,9 @@ impl Project {
                 }
             }
 
-            let contents = fs::read_to_string(&file_path)?;
+            let file_contents = fs::read_to_string(&file_path)?;
+            let contents = file_contents.clone();
+
             // The style map is used to describe the style of the slides.
             let style_content = fs::read_to_string(self.fs_path.join("style.yml"))?;
             let style_map: HashMap<String, String> = style_content
@@ -370,21 +375,26 @@ impl Project {
             // Next and previous move to the next and previous slides respectively.
             // Exit exits the presentation.
 
-            match Self::render_term(self, &contents, &style_map, render, &lines)? {
+            match Self::render_term(self, &contents, &style_map, render, &lines, current_slide)? {
                 (NavigationAction::Next, _new_lines_value) => {
                     render = true;
                     current_slide += 1;
+                    lines = 0;
                 }
                 (NavigationAction::Previous, _new_lines_value) => {
                     render = true;
                     if current_slide > 1 {
                         current_slide -= 1;
                     }
+                    lines = 0;
                 }
                 (NavigationAction::ScrollUp, new_lines_value) => {
                     render = false;
+
                     lines = new_lines_value;
                     lines += 1;
+
+                    // update contents here accordingly: check contents and file_contents and update accordingly
                 }
                 (NavigationAction::ScrollDown, new_lines_value) => {
                     render = false;
@@ -392,11 +402,11 @@ impl Project {
                     if lines > 0 {
                         lines -= 1;
                     }
+
+                    // update contents here accordingly: check contents and file_contents and update accordingly
                 }
                 (NavigationAction::Refresh, _new_lines_value) => {
-                    print!("//");
-                    render = false;
-                    lines = _new_lines_value;
+                    render = true;
                 }
                 (NavigationAction::Exit, _new_lines_value) => {
                     exit(0);

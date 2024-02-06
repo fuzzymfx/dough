@@ -465,37 +465,21 @@ pub fn align_vertical(
             blank_lines = 0;
         }
     }
-    if let Some(terminal_style) = style_map.get("terminal") {
-        let mut new_prettified = String::new();
-        if terminal_style == "warp" {
-            // If terminal style is warp, add blank lines at the end and beginning
-            if blank_lines > 2 {
-                for _ in 0..blank_lines - 2 {
-                    new_prettified.push('\n');
-                    prettified.push('\n');
-                }
-            }
+    let mut new_prettified = String::new();
+    // If terminal style is warp, add blank lines at the end and beginning
+    if blank_lines > 2 {
+        for _ in 0..blank_lines - 2 {
             new_prettified.push('\n');
-            new_prettified.push_str(&prettified);
-            prettified = new_prettified;
-
-            // The upper and lower bounds are updated to reflect the changes
-            *upper_bound += blank_lines;
-            *lower_bound += blank_lines;
-        } else {
-            // In all other cases, add blank lines at the beginning
-            if blank_lines > 2 {
-                for _ in 0..blank_lines - 2 {
-                    new_prettified.push('\n');
-                }
-            } else {
-                new_prettified.push('\n');
-            }
-            new_prettified.push_str(&prettified);
-            new_prettified.push('\n');
-            prettified = new_prettified;
+            prettified.push('\n');
         }
     }
+    new_prettified.push('\n');
+    new_prettified.push_str(&prettified);
+    prettified = new_prettified;
+
+    // The upper and lower bounds are updated to reflect the changes
+    *upper_bound += blank_lines;
+    *lower_bound += blank_lines;
 
     return prettified;
 }
