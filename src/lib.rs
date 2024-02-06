@@ -163,11 +163,17 @@ impl Project {
 
         if highlight {
             slide = prettify::prettify(&file_contents.to_string(), &style_map, lines_value)?;
+            let (upper_bound, lower_bound) = prettify::get_bounds();
 
-            if file_contents.lines().count() as u32 <= lines_value {
-                lines_value = file_contents.lines().count() as u32;
+            if upper_bound - lower_bound as u32 <= lines_value {
+                lines_value = upper_bound - lower_bound as u32;
             }
+
             print!("{}", slide);
+
+            if render && clear {
+                return Ok((NavigationAction::ToggleHighlight, lines_value));
+            }
         } else {
             slide = prettify::prettify(&file_contents.to_string(), &style_map, 0)?;
             // The upper and lower bounds are used to determine the number of lines to be rendered.
@@ -397,13 +403,7 @@ impl Project {
                 (NavigationAction::ScrollUp, new_lines_value) => {
                     render = false;
                     lines = new_lines_value;
-                    if highlight {
-                        if lines < contents.lines().count() as u32 {
-                            lines += 1;
-                        }
-                    } else {
-                        lines += 1
-                    }
+                    lines += 1
                 }
                 (NavigationAction::ScrollDown, new_lines_value) => {
                     render = false;
@@ -413,7 +413,7 @@ impl Project {
                     }
                 }
                 (NavigationAction::ToggleHighlight, new_lines_value) => {
-                    render = true;
+                    // render = true;
                     if highlight {
                         lines = 2;
                     } else {
