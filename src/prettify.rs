@@ -265,7 +265,8 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
                     .join("\n");
                 result.push_str(&highlighted_code.color(color).to_string());
             } else {
-                result.push_str(&code.value.color(color).to_string());
+                let escaped = code.value.replace("\t", "    ");
+                result.push_str(&&escaped.color(color).to_string());
             }
             result.push_str("\n```\n".replace("```", "").as_str());
             Some(result)
