@@ -594,6 +594,7 @@ pub fn align_custom(
             let line_num = lines.len() as u32 - highlight_line_num;
             if line_num < lines.len() as u32 {
                 let line = lines.get_mut(line_num as usize).unwrap();
+                *line = strip_ansi_codes(line).to_string();
                 *line = line
                     .color(foreground_color)
                     .on_color(background_color)
