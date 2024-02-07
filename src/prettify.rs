@@ -652,7 +652,7 @@ pub fn align_custom(
             // iterate and check for the end block of text
             // until the end block of text is found, push the lines into a vector
 
-            let mut block_lines: Vec<&str> = Vec::new();
+            let mut block_lines: Vec<&str> = vec![&aligned_line];
 
             while let Some(&next_line) = lines_iter.peek() {
                 if end_block_re.is_match(next_line) {
