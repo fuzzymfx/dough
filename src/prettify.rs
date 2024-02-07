@@ -685,10 +685,11 @@ pub fn align_custom(
                     }
                 }
             }
-            new_prettified.push_str(format!("{}\n", aligned_block).as_str());
+            new_prettified.push_str(format!("{}", aligned_block).as_str());
         } else {
-            new_prettified.push_str(format!("{}\n", aligned_line).as_str());
+            new_prettified.push_str(format!("{}", aligned_line).as_str());
         }
+        new_prettified.push('\n');
     }
 
     new_prettified
