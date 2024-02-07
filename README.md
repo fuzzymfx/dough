@@ -72,6 +72,7 @@ dough new my_presentation --template fancy_template
 ```
 
 Currently, there are three templates:
+
 - `default`
 - `code`
 - `light`
@@ -111,12 +112,81 @@ You can use arrow keys to navigate: right and left arrows to move between slides
 Vim keybindings are also supported: `h` and `l` to move between slides, and `j` and `k` to move between lines.
 The letters are case-insensitive.
 
+#### Customizing the Presentation
+
+You can customize the presentation by modifying the `style.yml` file in the project directory. The `config.yaml` file contains the default style settings for the terminal markdown renderer.
+
+```yaml
+# This file contains the default style settings for the terminal markdown renderer.
+# Markdown styles
+h1: red
+h2: yellow
+h3: green
+h4: cyan
+h5: blue
+h6: purple
+code: black on white
+blockquote: black on white
+ordered_list_bullet: yellow
+unordered_list_bullet: yellow
+ordered_list: white
+unordered_list: white
+link_text: black
+link_url: blue
+thematic_break: white on black
+
+# Terminal styles
+
+# clear will clear the terminal before rendering, you would need to scroll down to render each line
+clear: false
+
+box: false
+box_color: black on white
+
+# vertical_alignment will vertically align the text to the middle of the terminal
+vertical_alignment: true
+
+# horizontal_alignment will horizontally align the text to the middle of the terminal
+horizontal_alignment: true
+
+# syntax_highlighting will highlight the code syntax
+# this works well with GPU accelerated terminals, but not with the default Mac OS terminal. We suggest using iTerm2 or Kitty, or disabling this feature.
+
+syntax_highlighting: true
+synatx_theme: base16-ocean.dark
+#themes:[base16-ocean.dark,base16-eighties.dark,base16-mocha.dark,base16-ocean.light, Solarized (dark) and Solarized (light)]
+syntax_bg: false
+
+# Displays the slide number/total slides
+progress: false 
+
+# runtime map is used to store the runtimes for different languages
+# you can add your own runtimes for different languages. Currently, the following runtimes are supported:
+
+-runtime_map:
+  python: python3
+  sh: bash
+  bash: bash
+  javascript: node
+  typescript: node
+  ts: tsc
+  c: gcc
+  cpp: g++
+  java: javac
+  go: go run
+  rust: cargo run
+  ruby: ruby
+  php: php
+  swift: swift
+  kotlin: kotlinc
+```
+
+
 #### Running Code Blocks
 
 Dough supports running code blocks in the terminal. The code blocks are internally ordered in the order they appear in the markdown file. The code blocks are run in a separate thread, and the results are displayed in the terminal.
 
 - `n`: runs the `n`th code block. and outputs the result in the terminal.
-
 
 ## Contributing
 
