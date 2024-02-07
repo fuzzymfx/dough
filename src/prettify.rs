@@ -572,7 +572,7 @@ pub fn align_custom(
 
     let default_highlight_color = "black on white".to_string();
     let highlight_color = style_map
-        .get("highlight")
+        .get("highlighter")
         .unwrap_or(&default_highlight_color);
 
     let colors: Vec<&str> = highlight_color.split(" on ").collect();
