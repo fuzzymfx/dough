@@ -33,7 +33,12 @@ horizontal_alignment: true
 
 # syntax_highlighting will highlight the code syntax
 # this works well with the warp terminal, but not with the default Mac OS terminal
+# syantax_highlighting works well, but at times the rendering might not be perfect with box enabled. We suggest you to try with and without box to see which one works best for you. Alos, consider manually adjusting the indentation of the code blocks if needed.
+# chekout https://github.com/trishume/syntect for more information on themes
+
 syntax_highlighting: true
+synatx_theme: base16-ocean.dark
+synatx_bg: true
 
 # terminals vary in rendering. Currently, the following terminals are supported:
 #   - warp

@@ -1,19 +1,22 @@
 mod prettify;
 extern crate termion;
+mod ramen;
 mod utils;
+use crate::ramen::run_code;
 use crate::utils::remove_last_n_lines;
 
-use paris::Logger;
 use std::error::Error;
 use std::fmt;
 use std::fs;
 use std::sync::mpsc;
+use std::thread;
+
+use paris::Logger;
 
 use notify::{RecursiveMode, Watcher};
 use std::collections::HashMap;
 use std::io::{stdin, stdout, Result, Write};
 use std::process::exit;
-use std::thread;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
@@ -257,6 +260,20 @@ impl Project {
                     return Ok((NavigationAction::ScrollDown, lines_value))
                 }
                 Key::Ctrl('r') => return Ok((NavigationAction::Refresh, lines_value)),
+                Key::Char(c) if ('0'..='9').contains(&c) => {
+                    let mut log = Logger::new();
+                    let style_map_clone = style_map.clone(); // Clone the style_map for the new thread
+                    let c_num = (c as u8 - '0' as u8) as usize;
+                    thread::spawn(move || {
+                        let output = Self::run_code(c_num, style_map_clone)
+                            .expect("Could not run code block");
+                        log.success(format!("{}:", c_num));
+                        output.lines().for_each(|line| println!("\r{}", line));
+                        print!("\n");
+                    });
+
+                    continue;
+                }
                 _ => continue,
             }
         }
@@ -264,6 +281,16 @@ impl Project {
         drop(stdout);
 
         return Ok((NavigationAction::None, lines_value));
+    }
+
+    fn run_code(
+        num: usize,
+        env_map: HashMap<String, String>,
+    ) -> std::result::Result<String, Box<dyn Error>> {
+        let res = prettify::get_code(num)
+            .expect("\rCould not get code block. There is no code block with that number.");
+        let (lang, code) = res;
+        run_code(lang, code, &env_map)
     }
 
     /// This clears the terminal.

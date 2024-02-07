@@ -1,16 +1,27 @@
 use regex::Regex;
 use std::collections::HashMap;
 
-pub fn calculate_length_of_longest_line(prettified: String) -> usize {
-    let mut longest_line = 0;
+pub fn calculate_length_of_longest_line(prettified: &String) -> usize {
+    let lines: Vec<&str> = prettified.split('\n').collect();
 
-    for line in prettified.lines() {
-        if line.len() > longest_line {
-            longest_line = line.len();
-        }
-    }
+    let lines_clone = lines.clone();
 
-    longest_line
+    // Calculate the length of the longest line
+    let max_length = lines_clone
+        .iter()
+        .map(|s| {
+            let leading_spaces = strip_ansi_codes(s)
+                .chars()
+                .take_while(|c| *c == ' ')
+                .count();
+
+            let s = strip_ansi_codes(s).replace("̶", "");
+            s.chars().count() + leading_spaces
+        })
+        .max()
+        .unwrap_or(0);
+
+    max_length
 }
 
 pub fn store_colors(prettified: &Vec<String>) -> HashMap<usize, String> {
