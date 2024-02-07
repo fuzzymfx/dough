@@ -469,7 +469,7 @@ pub fn align_vertical(
         }
     }
     let mut new_prettified = String::new();
-    // If terminal style is warp, add blank lines at the end and beginning
+    // Add blank lines at the end and beginning
     if blank_lines > 2 {
         for _ in 0..blank_lines - 2 {
             new_prettified.push('\n');

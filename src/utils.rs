@@ -122,18 +122,34 @@ horizontal_alignment: true
 
 # syntax_highlighting will highlight the code syntax
 # this works well with the warp terminal, but not with the default Mac OS terminal
-# syantax_highlighting works well, but at times the rendering might not be perfect with box enabled. We suggest you to try with and without box to see which one works best for you. Alos, consider manually adjusting the indentation of the code blocks if needed.
-# chekout https://github.com/trishume/syntect for more information on themes
 
 syntax_highlighting: true
-synatx_theme: base16-ocean.dark
-syntax_bg: true
+syntax_theme: base16-ocean.light
+#themes:[base16-ocean.dark,base16-eighties.dark,base16-mocha.dark,base16-ocean.light, Solarized (dark) and Solarized (light)]
+syntax_bg: false
 
-# terminals vary in rendering. Currently, the following terminals are supported:
-#   - warp
-#   - default Mac OS terminal
+progress: true
 
-terminal: warp")?;
+# runtime map is used to store the runtimes for different languages
+# you can add your own runtimes for different languages. Currently, the following runtimes are supported:
+
+-runtime_map:
+  python: python3
+  sh: bash
+  bash: bash
+  javascript: node
+  typescript: node
+  ts: tsc
+  c: gcc
+  cpp: g++
+  java: javac
+  go: go run
+  rust: cargo run
+  ruby: ruby
+  php: php
+  swift: swift
+  kotlin: kotlinc
+")?;
         if verify_path.exists() {
             log.info("fin style.yml");
             Ok(())
