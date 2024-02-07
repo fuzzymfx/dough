@@ -209,7 +209,7 @@ impl Project {
                 log.info(format!(
                     "[{}/{}]",
                     current_slide,
-                    fs::read_dir(&self.fs_path)?.count()
+                    fs::read_dir(&self.fs_path)?.count() - 1
                 ));
             }
             _ => {}
