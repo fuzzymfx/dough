@@ -202,6 +202,7 @@ TODO:
   - [ ] Over Scroll in infinite scrolling
   - [ ] Scroll breaking in highlight mode in thematic break
   - [ ] Skip empty lines in highlight mode
+- [ ] *bug* custom aligner adds empty lines after text-block alignment
 - [ ] *feat.* Hot Module Reload
 - [ ] *feat.* Add a support for maximum width and height of the terminal. Write a word wrapper.
 - [ ] *feat.* Add comprehensive support for common Markdown elements.
