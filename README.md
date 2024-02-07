@@ -43,9 +43,19 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 ### Usage
 
-Dough provides two main subcommands: new and present.
+**Without templates**
+
+Create a new dir and create your presentations using markdown:
+
+```bash
+dough present <project-name> [directory name]
+```
+
+Dough provides two main subcommands: new and present. 
 
 #### Creating a New Project
+
+**With templates**
 
 ```bash
 dough new <project-name> [--template <template-name>]
@@ -60,6 +70,12 @@ Example:
 ```bash
 dough new my_presentation --template fancy_template
 ```
+
+Currently, there are three templates:
+
+- `default`
+- `code`
+- `light`
 
 You can add new `templates` under the templates folder. Each template is a folder containing a `template.md` file that contains the template's Markdown code.
 <!-- You can also add a `template.css` file to add custom CSS styling to the template. -->
@@ -80,10 +96,98 @@ dough present my_presentation --mode html
 
 #### Navigating through the Presentation
 
+- `t` :
+  - `highlighting` mode
+  - `scrolling` mode
+- `q`, `Esc`, or `ctrl + c` to quit the presentation.
+- `ctrl + r` to refresh the presentation.
+- `l` or `right arrow` to move to the next slide.
+- `h` or `left arrow` to move to the previous slide.
+- `j` or `down arrow` to move to the next line.
+- `k` or `up arrow` to move to the previous line.
+
+The `t` key is used to toggle between **highlighting** and **scrolling** modes. In highlighting mode, you can use the arrow keys to navigate between slides. In scrolling mode, you can use the arrow keys to scroll through the content of the current slide.
+
 You can use arrow keys to navigate: right and left arrows to move between slides, and up and down arrows to move between lines.
 Vim keybindings are also supported: `h` and `l` to move between slides, and `j` and `k` to move between lines.
 The letters are case-insensitive.
-`q` to quit the presentation.
+
+#### Customizing the Presentation
+
+You can customize the presentation by modifying the `style.yml` file in the project directory. The `config.yaml` file contains the default style settings for the terminal markdown renderer.
+
+```yaml
+# This file contains the default style settings for the terminal markdown renderer.
+
+# Markdown styles
+h1: red
+h2: yellow
+h3: green
+h4: cyan
+h5: blue
+h6: purple
+code: black on white
+blockquote: black on white
+ordered_list_bullet: yellow
+unordered_list_bullet: yellow
+ordered_list: white
+unordered_list: white
+link_text: black
+link_url: blue
+thematic_break: white on black
+
+# Terminal styles
+
+# clear will clear the terminal before rendering, you would need to scroll down to render each line
+clear: false
+
+box: false
+box_color: black on white
+
+# vertical_alignment will vertically align the text to the middle of the terminal
+vertical_alignment: true
+
+# horizontal_alignment will horizontally align the text to the middle of the terminal
+horizontal_alignment: true
+
+# syntax_highlighting will highlight the code syntax
+# this works well with GPU accelerated terminals, but not with the default Mac OS terminal. We suggest using iTerm2 or Kitty, or disabling this feature.
+
+syntax_highlighting: true
+synatx_theme: base16-ocean.dark
+#themes:[base16-ocean.dark,base16-eighties.dark,base16-mocha.dark,base16-ocean.light, Solarized (dark) and Solarized (light)]
+syntax_bg: false
+
+# Displays the slide number/total slides
+progress: false 
+
+# runtime map is used to store the runtimes for different languages
+# you can add your own runtimes for different languages. Currently, the following runtimes are supported:
+
+-runtime_map:
+  python: python3
+  sh: bash
+  bash: bash
+  javascript: node
+  typescript: node
+  ts: tsc
+  c: gcc
+  cpp: g++
+  java: javac
+  go: go run
+  rust: cargo run
+  ruby: ruby
+  php: php
+  swift: swift
+  kotlin: kotlinc
+```
+
+
+#### Running Code Blocks
+
+Dough supports running code blocks in the terminal. The code blocks are internally ordered in the order they appear in the markdown file. The code blocks are run in a separate thread, and the results are displayed in the terminal.
+
+- `n`: runs the `n`th code block. and outputs the result in the terminal.
 
 ## Contributing
 
@@ -92,7 +196,6 @@ If you're familiar with Rust and are looking for a project to contribute to, Dou
 TODO:
 
 <img width="560" alt="syntax-highlighting" src="https://github.com/fuzzymfx/dough/assets/69160388/8b071096-adce-434c-8ff5-5204e6ca19b1">
-
 
 v1:
 
@@ -115,7 +218,7 @@ v2:
 
 - Improving the rendering engine:
   - ~~Add a refresh feature while rendering slides~~
-    - Hot Module Reload( FIX )
+    - Hot Module Reload( *auto* )
   - ~~Add support for rendering **nested syntax**~~
   - Add a support for maximum width and height of the terminal. Write a word wrapper.
   - Address the color storage issue for multiline elements, ensuring ANSI escape sequences are properly stripped: Refine color correction post-alignment for a seamless visual experience.
@@ -129,7 +232,7 @@ v2:
 - ~~Syntax Highlighting in code blocks~~
   - ~~Improve the performance of syntax highlighting. The current implementation is CPU intensive. Use a different library for syntax highlighting, or parallel threads to improve performance.~~
 - ~~Custom text alignment: A regex match for individual text alignment~~
-  - Improve the alignment of segments of text.
+  - ~~Improve the alignment of segments of text.~~
 - ~~Implement running code blocks on separate threads and displaying results in the current console.~~
 
 ## Acknowledgements

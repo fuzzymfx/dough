@@ -219,9 +219,10 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
 
         mdast::Node::Code(code) => {
             let language = code.lang.unwrap_or("plaintext".to_string());
-            let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
 
-            // Store the code in the global CODES variable
+            // Store the codes in the file in the global CODES variable
+            // The codes are stored in the order of their appearance in the file
+
             let mut codes = CODES.lock().unwrap();
 
             let last_index = codes.len();
@@ -241,9 +242,9 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
             let include_background_color: bool = match styles
                 .get("syntax_bg")
                 .map(|s| s.as_str())
-                .unwrap_or("true")
+                .unwrap_or("false")
             {
-                "true" => true,
+                "true" | "True" => true,
                 _ => false,
             };
 
@@ -261,9 +262,10 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
                     .map(|line| format!("{}", line))
                     .collect::<Vec<String>>()
                     .join("\n");
-                result.push_str(&highlighted_code.color(color).to_string());
+                result.push_str(&highlighted_code.to_string());
             } else {
-                result.push_str(&code.value.color(color).to_string());
+                let escaped = code.value.replace("\t", "    ");
+                result.push_str(&&escaped.to_string());
             }
             result.push_str("\n```\n".replace("```", "").as_str());
             Some(result)
@@ -300,11 +302,8 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
                     .to_string(),
             );
 
-            if link.url.to_string().contains("http") {
-                result.push_str(" :(");
-                result.push_str(&link.url.color(color_url).to_string());
-                result.push(')');
-            }
+            result.push_str(" - ");
+            result.push_str(&link.url.color(color_url).to_string());
 
             Some(result)
         }
@@ -312,11 +311,22 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
         mdast::Node::ThematicBreak(_) => Some("\n---\n".to_string()),
 
         mdast::Node::BlockQuote(blockquote) => {
+            let default_blockquote_color = "black on white".to_string();
+
+            let color = styles
+                .get("blockquote")
+                .map(|s| s.as_str())
+                .unwrap_or(&default_blockquote_color);
+
+            let colors: Vec<&str> = color.split(" on ").collect();
+            let foreground_color = colors[0];
+            let background_color = colors[1];
+
             let mut result = String::default();
             result.push_str(
                 &join_children(blockquote.children, depth + 1)
-                    .on_white()
-                    .black()
+                    .color(foreground_color)
+                    .on_color(background_color)
                     .to_string(),
             );
             result.push('\n');
@@ -465,37 +475,21 @@ pub fn align_vertical(
             blank_lines = 0;
         }
     }
-    if let Some(terminal_style) = style_map.get("terminal") {
-        let mut new_prettified = String::new();
-        if terminal_style == "warp" {
-            // If terminal style is warp, add blank lines at the end and beginning
-            if blank_lines > 2 {
-                for _ in 0..blank_lines - 2 {
-                    new_prettified.push('\n');
-                    prettified.push('\n');
-                }
-            }
+    let mut new_prettified = String::new();
+    // Add blank lines at the end and beginning
+    if blank_lines > 2 {
+        for _ in 0..blank_lines - 2 {
             new_prettified.push('\n');
-            new_prettified.push_str(&prettified);
-            prettified = new_prettified;
-
-            // The upper and lower bounds are updated to reflect the changes
-            *upper_bound += blank_lines;
-            *lower_bound += blank_lines;
-        } else {
-            // In all other cases, add blank lines at the beginning
-            if blank_lines > 2 {
-                for _ in 0..blank_lines - 2 {
-                    new_prettified.push('\n');
-                }
-            } else {
-                new_prettified.push('\n');
-            }
-            new_prettified.push_str(&prettified);
-            new_prettified.push('\n');
-            prettified = new_prettified;
+            prettified.push('\n');
         }
     }
+    new_prettified.push('\n');
+    new_prettified.push_str(&prettified);
+    prettified = new_prettified;
+
+    // The upper and lower bounds are updated to reflect the changes
+    *upper_bound += blank_lines;
+    *lower_bound += blank_lines;
 
     return prettified;
 }
@@ -555,15 +549,60 @@ pub fn align_horizontal(
 /// $[clr]$ -> center, left, right alignment respectively
 /// This is used for text alignment within the content
 
-pub fn align_custom(prettified: String) -> String {
+pub fn align_custom(
+    mut prettified: String,
+    highlight_line_num: u32,
+    style_map: &HashMap<String, String>,
+) -> String {
     let longest_line = calculate_length_of_longest_line(&prettified);
 
     let mut new_prettified = String::new();
 
-    for line in prettified.lines() {
+    let mut content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
+
+    for line in content_lines.iter_mut() {
+        if line == "---" || line == "***" || line == "__i_" {
+            let mut new_line = String::from(line.replace("---", ""));
+            for _ in 0..longest_line {
+                new_line.push_str("-");
+            }
+            *line = new_line;
+        }
+    }
+
+    let default_highlight_color = "black on white".to_string();
+    let highlight_color = style_map
+        .get("highlighter")
+        .unwrap_or(&default_highlight_color);
+
+    let colors: Vec<&str> = highlight_color.split(" on ").collect();
+    let foreground_color = colors[0];
+    let background_color = colors[1];
+
+    prettified = content_lines.join("\n");
+
+    let mut lines: Vec<String> = prettified.lines().map(|line| line.to_string()).collect();
+    if lines.len() > highlight_line_num as usize {
+        let line_num = lines.len() as u32 - highlight_line_num;
+        if line_num < lines.len() as u32 {
+            let line = lines.get_mut(line_num as usize).unwrap();
+            *line = line
+                .color(foreground_color)
+                .on_color(background_color)
+                .to_string();
+        }
+    }
+
+    prettified = lines.join("\n");
+
+    let mut lines_iter = prettified.lines().peekable();
+
+    while let Some(line) = lines_iter.next() {
         let mut aligned_line = line.to_string();
-        let re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
-        if let Some(captures) = re.captures(&aligned_line) {
+        let line_re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
+        let block_re = regex::Regex::new(r"\$\[([clr])\]").unwrap();
+        let end_block_re = regex::Regex::new(r"\$\[e\]").unwrap();
+        if let Some(captures) = line_re.captures(&aligned_line) {
             let alignment = captures.get(1).unwrap().as_str();
 
             let new_line = aligned_line.replace(&captures[0], "");
@@ -588,16 +627,47 @@ pub fn align_custom(prettified: String) -> String {
                     aligned_line = aligned_line.replace(&captures[0], "");
                 }
             }
-        }
+            new_prettified.push_str(&aligned_line);
+        } else if let Some(captures) = block_re.captures(&aligned_line) {
+            let alignment = captures.get(1).unwrap().as_str();
 
-        // handle rendering thematic breaks
+            let mut block_lines: Vec<&str> = vec![line];
 
-        if line == "---" || line == "***" || line == "___" {
-            let mut new_line = String::from(line.replace("---", ""));
-            for _ in 0..longest_line {
-                new_line.push_str("-");
+            while let Some(&next_line) = lines_iter.peek() {
+                if end_block_re.is_match(next_line) {
+                    break;
+                }
+                block_lines.push(lines_iter.next().unwrap());
             }
-            new_prettified.push_str(&new_line);
+            lines_iter.next();
+
+            let mut aligned_block = String::new();
+
+            for line in block_lines.iter().skip(1) {
+                let line_length = strip_ansi_codes(&line).len();
+                match alignment {
+                    "c" => {
+                        let spaces = (longest_line - line_length) / 2;
+                        let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+                        new_line = new_line.replace(&captures[0], "");
+                        aligned_block.push_str(&new_line);
+                    }
+                    "r" => {
+                        let spaces = longest_line - line_length;
+                        let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+                        new_line = new_line.replace(&captures[0], "");
+                        aligned_block.push_str(&new_line);
+                    }
+                    _ => {
+                        // Do nothing for "l" alignment
+                        let new_line = line.replace(&captures[0], "");
+                        aligned_block.push_str(&new_line);
+                    }
+                }
+
+                aligned_block.push('\n');
+            }
+            new_prettified.push_str(&aligned_block);
         } else {
             new_prettified.push_str(&aligned_line);
         }
@@ -616,7 +686,11 @@ pub fn align_custom(prettified: String) -> String {
 /// 3. vertical_alignment: true/false
 /// 4. terminal: warp/normal    
 
-pub fn align_content(mut prettified: String, style_map: &HashMap<String, String>) -> String {
+pub fn align_content(
+    mut prettified: String,
+    style_map: &HashMap<String, String>,
+    highlight_line_num: u32,
+) -> String {
     let (_width, height) = termion::terminal_size().unwrap();
 
     let mut upper_bound = prettified.lines().count() as u32;
@@ -626,10 +700,10 @@ pub fn align_content(mut prettified: String, style_map: &HashMap<String, String>
 
     let mut line_color_map = store_colors(&content_lines);
 
-    prettified = align_custom(prettified);
+    prettified = align_custom(prettified, highlight_line_num, style_map);
 
     if style_map.get("box").unwrap() == "true" {
-        upper_bound += 4;
+        upper_bound += 2;
         prettified = draw_box(&prettified, &line_color_map);
     }
 
@@ -706,6 +780,10 @@ pub fn get_bounds() -> (u32, u32) {
     return (upper_bound, lower_bound);
 }
 
+/// This function is used to get the code from the global CODES variable
+/// The index is used to fetch the code from the global CODES variable
+/// The code is returned as a tuple of language and code
+
 pub fn get_code(index: usize) -> Result<(String, String), Box<dyn std::error::Error>> {
     let codes = CODES.lock().unwrap();
 
@@ -722,7 +800,11 @@ pub fn get_code(index: usize) -> Result<(String, String), Box<dyn std::error::Er
 /// The string is then decorated with the appropriate styles
 /// The styles are fetched from the global STYLES variable
 
-pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<String, String> {
+pub fn prettify(
+    md_text: &str,
+    style_map: &HashMap<String, String>,
+    highlight_line_num: u32,
+) -> Result<String, Box<dyn std::error::Error>> {
     let map = style_map.clone();
     let mut global_styles = STYLES.lock().unwrap();
     *global_styles = map;
@@ -754,7 +836,7 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
     let mut prettified = String::new();
 
     match parsed {
-        Err(err) => return Err(format!("Could not prettify markdown, error: {}", err)),
+        Err(err) => return Err(format!("Error parsing markdown: {}", err).into()),
         Ok(node) => {
             let result = visit_md_node(node, 0);
             if let Some(text) = result {
@@ -763,5 +845,5 @@ pub fn prettify(md_text: &str, style_map: &HashMap<String, String>) -> Result<St
         }
     }
 
-    return Ok(align_content(prettified, style_map));
+    return Ok(align_content(prettified, style_map, highlight_line_num));
 }

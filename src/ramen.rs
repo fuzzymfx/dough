@@ -19,7 +19,7 @@ pub fn run_code(
         "c" | "c++" | "cpp" => run_c_code(code, runtime_map.get("c").unwrap().as_str()),
         "java" => run_java_code(code, runtime_map.get("java").unwrap().as_str()),
         "rust" => run_rust_code(code, runtime_map.get("rust").unwrap().as_str()),
-        _ => Ok(String::from("")),
+        _ => Err("Language not supported".to_string())?,
     };
     output
 }

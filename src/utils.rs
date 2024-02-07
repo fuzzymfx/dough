@@ -1,3 +1,4 @@
+use paris::Logger;
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -72,4 +73,94 @@ pub fn remove_last_n_lines(text: &str, n: u32) -> String {
         }
     }
     return lines.join("\n");
+}
+
+pub fn remove_comments(text: &str) -> String {
+    let re = Regex::new(r"(?s)<!--.*?-->").unwrap();
+    let result = re.replace_all(text, "");
+    result.to_string()
+}
+
+pub fn create_style(project: std::path::PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let mut log = Logger::new();
+    let style_path = project.join("style.yml");
+    let verify_path = style_path.clone();
+
+    if !style_path.exists() {
+        std::fs::write(style_path, "
+# This file contains the default style settings for the terminal markdown renderer.
+# Markdown styles
+h1: red
+h2: yellow
+h3: green
+h4: cyan
+h5: blue
+h6: purple
+code: black on white
+blockquote: black on white
+ordered_list_bullet: yellow
+unordered_list_bullet: yellow
+ordered_list: white
+unordered_list: white
+link_text: black
+link_url: blue
+thematic_break: white on black
+        
+# Terminal styles
+
+# clear will clear the terminal before rendering, you would need to scroll down to render each line
+clear: false
+
+box: true
+box_color: black on white
+
+# vertical_alignment will vertically align the text to the middle of the terminal
+vertical_alignment: true
+
+# horizontal_alignment will horizontally align the text to the middle of the terminal
+horizontal_alignment: true
+
+# syntax_highlighting will highlight the code syntax
+# this works well with the warp terminal, but not with the default Mac OS terminal
+
+syntax_highlighting: true
+syntax_theme: base16-ocean.light
+#themes:[base16-ocean.dark,base16-eighties.dark,base16-mocha.dark,base16-ocean.light, Solarized (dark) and Solarized (light)]
+syntax_bg: false
+
+progress: true
+
+# runtime map is used to store the runtimes for different languages
+# you can add your own runtimes for different languages. Currently, the following runtimes are supported:
+
+-runtime_map:
+  python: python3
+  sh: bash
+  bash: bash
+  javascript: node
+  typescript: node
+  ts: tsc
+  c: gcc
+  cpp: g++
+  java: javac
+  go: go run
+  rust: cargo run
+  ruby: ruby
+  php: php
+  swift: swift
+  kotlin: kotlinc
+")?;
+        if verify_path.exists() {
+            log.info("fin style.yml");
+            Ok(())
+        } else {
+            Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Failed to create style.yml",
+            )))
+        }
+    } else {
+        log.warn("style.yml exists. Skipped.");
+        Ok(())
+    }
 }

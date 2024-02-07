@@ -23,7 +23,7 @@ fn main() {
             "
         ~~~~~~
         |     |
-        |     | : A command-line tool to create presentations from Markdown files
+        |     | : A command-line tool to create and present using Markdown files
         |     |
         ~~~~~~
         ",
@@ -31,14 +31,14 @@ fn main() {
         .subcommand(
             // Creates a new project under the `projects` directory.
             SubCommand::with_name("new")
-                .about("Create a new project")
-                .arg(Arg::with_name("project-name").required(true))
+                .about("Create a new project.")
+                .arg(Arg::with_name("project-name").required(true).help("The name of the project"))
                 .arg(
                     Arg::with_name("template")
                         .long("template")
                         .takes_value(true)
                         .default_value("default")
-                        .help("Choose a template for the project"),
+                        .help("Choose a template for the project. If you don't specify a template, the default template will be used. You can also create a project just by creating a new directory and adding a 1.md file to it."),
                 ),
         )
         .subcommand(
@@ -52,10 +52,12 @@ fn main() {
                         .takes_value(true)
                         .possible_values(&["html", "term"])
                         .default_value("term")
-                        .help("Choose the mode of presentation: html or term"),
+                        .help("Choose the mode of presentation: html or term. Currently we only support term"),
                 ),
         )
         .get_matches();
+
+    // println!("{:?}", matches);
 
     // Dispatch commands based on the provided subcommands.
     if let Some(args) = matches.subcommand_matches("new") {
@@ -70,13 +72,13 @@ fn main() {
             "
         ~~~~~~
         |     |
-        |     | : A command-line tool to create presentations from Markdown files
+        |     | : A command-line tool to create and present using Markdown files
         |     |
         ~~~~~~
         "
         );
 
-        App::new("dough").print_help().unwrap();
+        println!("\n{}", matches.usage());
     }
 }
 
@@ -139,13 +141,6 @@ fn present_project(args: &clap::ArgMatches, log: &mut Logger) {
     match mode {
         // The HTML mode is not implemented yet, so we only support terminal mode for now. This
         // will be updated in the future.
-        "html" => {
-            // if let Err(err) = project.present_html() {
-            //     log.error(format!("Could not present project in HTML, error: {}", err));
-            //     process::exit(3);
-            // }
-        }
-        // Present the project in terminal mode.
         "term" | _ => {
             if let Err(err) = project.present_term() {
                 log.error(format!(
