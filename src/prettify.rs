@@ -510,7 +510,7 @@ pub fn align_horizontal(
     line_color_map: HashMap<usize, String>,
 ) -> String {
     let blank_chars;
-    let longest_line = calculate_length_of_longest_line(&prettified);
+    let longest_line = calculate_length_of_longest_line(&prettified, false);
 
     if style_map.get("horizontal_alignment").unwrap() == "false" {
         blank_chars = 0;
@@ -561,7 +561,7 @@ pub fn align_custom(
     style_map: &HashMap<String, String>,
 ) -> String {
     // calculate the length of the longest line
-    let longest_line = calculate_length_of_longest_line(&prettified);
+    let longest_line = calculate_length_of_longest_line(&prettified, true);
 
     let mut new_prettified = String::new();
 
@@ -635,7 +635,7 @@ pub fn align_custom(
                     aligned_line = new_line;
                 }
                 "r" => {
-                    let spaces = longest_line - line_length;
+                    let spaces = longest_line - line_length - 1;
                     let mut new_line = format!("{}{}", " ".repeat(spaces), line);
                     new_line = new_line.replace(&captures[0], "");
                     aligned_line = new_line;

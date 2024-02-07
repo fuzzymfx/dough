@@ -2,12 +2,12 @@ use paris::Logger;
 use regex::Regex;
 use std::collections::HashMap;
 
-pub fn calculate_length_of_longest_line(prettified: &String) -> usize {
+pub fn calculate_length_of_longest_line(prettified: &String, spaces: bool) -> usize {
     let lines: Vec<&str> = prettified.split('\n').collect();
 
     let lines_clone = lines.clone();
 
-    // Calculate the length of the longest line
+    // Calculate the length of the longest line without considering spaces
     let max_length = lines_clone
         .iter()
         .map(|s| {
@@ -17,7 +17,12 @@ pub fn calculate_length_of_longest_line(prettified: &String) -> usize {
                 .count();
 
             let s = strip_ansi_codes(s).replace("̶", "");
-            s.chars().count() + leading_spaces
+            let line_length = if spaces {
+                s.chars().count()
+            } else {
+                s.chars().filter(|c| *c != ' ').count()
+            };
+            line_length + leading_spaces
         })
         .max()
         .unwrap_or(0);
