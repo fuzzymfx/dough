@@ -542,22 +542,39 @@ pub fn align_horizontal(
 /// $[clr]$ -> center, left, right alignment respectively
 /// This is used for text alignment within the content
 
-pub fn align_custom(prettified: String) -> String {
+pub fn align_custom(mut prettified: String, highlight_line_num: u32) -> String {
     let longest_line = calculate_length_of_longest_line(&prettified);
 
     let mut new_prettified = String::new();
 
-    let mut lines_iter = prettified.lines().peekable();
+    let mut content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
 
-    while let Some(line) = lines_iter.next() {
-        if line == "---" || line == "***" || line == "___" {
+    for line in content_lines.iter_mut() {
+        if line == "---" || line == "***" || line == "__i_" {
             let mut new_line = String::from(line.replace("---", ""));
             for _ in 0..longest_line {
                 new_line.push_str("-");
             }
-            new_prettified.push_str(&new_line);
+            *line = new_line;
         }
+    }
 
+    prettified = content_lines.join("\n");
+
+    let mut lines: Vec<String> = prettified.lines().map(|line| line.to_string()).collect();
+    if lines.len() > highlight_line_num as usize {
+        let line_num = lines.len() as u32 - highlight_line_num;
+        if line_num < lines.len() as u32 {
+            let line = lines.get_mut(line_num as usize).unwrap();
+            *line = line.on_white().black().to_string();
+        }
+    }
+
+    prettified = lines.join("\n");
+
+    let mut lines_iter = prettified.lines().peekable();
+
+    while let Some(line) = lines_iter.next() {
         let mut aligned_line = line.to_string();
         let line_re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
         let block_re = regex::Regex::new(r"\$\[([clr])\]").unwrap();
@@ -646,7 +663,11 @@ pub fn align_custom(prettified: String) -> String {
 /// 3. vertical_alignment: true/false
 /// 4. terminal: warp/normal    
 
-pub fn align_content(mut prettified: String, style_map: &HashMap<String, String>) -> String {
+pub fn align_content(
+    mut prettified: String,
+    style_map: &HashMap<String, String>,
+    highlight_line_num: u32,
+) -> String {
     let (_width, height) = termion::terminal_size().unwrap();
 
     let mut upper_bound = prettified.lines().count() as u32;
@@ -656,7 +677,7 @@ pub fn align_content(mut prettified: String, style_map: &HashMap<String, String>
 
     let mut line_color_map = store_colors(&content_lines);
 
-    prettified = align_custom(prettified);
+    prettified = align_custom(prettified, highlight_line_num);
 
     if style_map.get("box").unwrap() == "true" {
         upper_bound += 2;
@@ -801,17 +822,5 @@ pub fn prettify(
         }
     }
 
-    //highlight the line number from the end of the content
-    let mut lines: Vec<String> = prettified.lines().map(|line| line.to_string()).collect();
-    if lines.len() > highlight_line_num as usize {
-        let line_num = lines.len() as u32 - highlight_line_num;
-        if line_num < lines.len() as u32 {
-            let line = lines.get_mut(line_num as usize).unwrap();
-            *line = line.on_white().black().to_string();
-        }
-    }
-
-    prettified = lines.join("\n");
-
-    return Ok(align_content(prettified, style_map));
+    return Ok(align_content(prettified, style_map, highlight_line_num));
 }
