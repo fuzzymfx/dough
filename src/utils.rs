@@ -105,7 +105,7 @@ unordered_list: white
 link_text: black
 link_url: blue
 thematic_break: white on black
-
+        
 # Terminal styles
 
 # clear will clear the terminal before rendering, you would need to scroll down to render each line

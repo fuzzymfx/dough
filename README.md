@@ -118,6 +118,7 @@ You can customize the presentation by modifying the `style.yml` file in the proj
 
 ```yaml
 # This file contains the default style settings for the terminal markdown renderer.
+
 # Markdown styles
 h1: red
 h2: yellow

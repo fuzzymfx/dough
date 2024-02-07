@@ -219,7 +219,6 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
 
         mdast::Node::Code(code) => {
             let language = code.lang.unwrap_or("plaintext".to_string());
-            let color: &str = styles.get("code").map(|s| s.as_str()).unwrap_or("white");
 
             // Store the codes in the file in the global CODES variable
             // The codes are stored in the order of their appearance in the file
@@ -263,10 +262,10 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
                     .map(|line| format!("{}", line))
                     .collect::<Vec<String>>()
                     .join("\n");
-                result.push_str(&highlighted_code.color(color).to_string());
+                result.push_str(&highlighted_code.to_string());
             } else {
                 let escaped = code.value.replace("\t", "    ");
-                result.push_str(&&escaped.color(color).to_string());
+                result.push_str(&&escaped.to_string());
             }
             result.push_str("\n```\n".replace("```", "").as_str());
             Some(result)
@@ -303,11 +302,8 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
                     .to_string(),
             );
 
-            if link.url.to_string().contains("http") {
-                result.push_str(" :(");
-                result.push_str(&link.url.color(color_url).to_string());
-                result.push(')');
-            }
+            result.push_str(" - ");
+            result.push_str(&link.url.color(color_url).to_string());
 
             Some(result)
         }
@@ -315,11 +311,22 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
         mdast::Node::ThematicBreak(_) => Some("\n---\n".to_string()),
 
         mdast::Node::BlockQuote(blockquote) => {
+            let default_blockquote_color = "black on white".to_string();
+
+            let color = styles
+                .get("blockquote")
+                .map(|s| s.as_str())
+                .unwrap_or(&default_blockquote_color);
+
+            let colors: Vec<&str> = color.split(" on ").collect();
+            let foreground_color = colors[0];
+            let background_color = colors[1];
+
             let mut result = String::default();
             result.push_str(
                 &join_children(blockquote.children, depth + 1)
-                    .on_white()
-                    .black()
+                    .color(foreground_color)
+                    .on_color(background_color)
                     .to_string(),
             );
             result.push('\n');
@@ -542,7 +549,11 @@ pub fn align_horizontal(
 /// $[clr]$ -> center, left, right alignment respectively
 /// This is used for text alignment within the content
 
-pub fn align_custom(mut prettified: String, highlight_line_num: u32) -> String {
+pub fn align_custom(
+    mut prettified: String,
+    highlight_line_num: u32,
+    style_map: &HashMap<String, String>,
+) -> String {
     let longest_line = calculate_length_of_longest_line(&prettified);
 
     let mut new_prettified = String::new();
@@ -559,6 +570,15 @@ pub fn align_custom(mut prettified: String, highlight_line_num: u32) -> String {
         }
     }
 
+    let default_highlight_color = "black on white".to_string();
+    let highlight_color = style_map
+        .get("highlight")
+        .unwrap_or(&default_highlight_color);
+
+    let colors: Vec<&str> = highlight_color.split(" on ").collect();
+    let foreground_color = colors[0];
+    let background_color = colors[1];
+
     prettified = content_lines.join("\n");
 
     let mut lines: Vec<String> = prettified.lines().map(|line| line.to_string()).collect();
@@ -566,7 +586,10 @@ pub fn align_custom(mut prettified: String, highlight_line_num: u32) -> String {
         let line_num = lines.len() as u32 - highlight_line_num;
         if line_num < lines.len() as u32 {
             let line = lines.get_mut(line_num as usize).unwrap();
-            *line = line.on_white().black().to_string();
+            *line = line
+                .color(foreground_color)
+                .on_color(background_color)
+                .to_string();
         }
     }
 
@@ -677,7 +700,7 @@ pub fn align_content(
 
     let mut line_color_map = store_colors(&content_lines);
 
-    prettified = align_custom(prettified, highlight_line_num);
+    prettified = align_custom(prettified, highlight_line_num, style_map);
 
     if style_map.get("box").unwrap() == "true" {
         upper_bound += 2;
