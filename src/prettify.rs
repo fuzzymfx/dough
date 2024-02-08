@@ -603,6 +603,8 @@ pub fn align_custom(
         }
 
         prettified = lines.join("\n");
+    } else {
+        prettified = content_lines.join("\n");
     }
 
     // the custom alignment is done using the following syntax:
