@@ -210,7 +210,7 @@ TODO:
 - [ ] *bug* **IMP** Address the color storage issue for multiline elements, ensuring ANSI escape sequences are properly stripped: Refine color correction post-alignment for a seamless visual experience.
 - [ ] *bug* Fix scrolling issue in highlight mode:
   - [ ] Over Scroll in infinite scrolling
-  - [ ] Scroll breaking in highlight mode in thematic break
+  - [x] Scroll breaking in highlight mode in thematic break
   - [ ] Skip empty lines in highlight mode
 - [ ] *bug* custom aligner adds empty lines after text-block alignment
 - [ ] *feat.* Hot Module Reload
