@@ -6,13 +6,23 @@ Dough is a command-line tool written in Rust that allows you to create and prese
 
 ## Getting Started
 
-### Prerequisites
-
-- [Rust programming language](https://www.rust-lang.org/tools/install)
-- Clap library: clap = "2"
-- Paris library: paris = "0.5"
-
 ### Installation
+
+### Binary
+
+Get the latest release from the [releases page](https://github.com/fuzzymfx/dough/releases).
+
+create a project directory and write your presentation in markdown.
+
+```bash
+mkdir my_folder && touch my_folder/1.md
+```
+
+```bash
+./dough present <project-name> 
+```
+
+### Working with Source
 
 Clone the Dough repository:
 
@@ -43,7 +53,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 ### Usage
 
-**Without templates**
+#### Without templates
 
 Create a new dir and create your presentations using markdown:
 
@@ -55,7 +65,7 @@ Dough provides two main subcommands: new and present.
 
 #### Creating a New Project
 
-**With templates**
+#### With templates
 
 ```bash
 dough new <project-name> [--template <template-name>]
