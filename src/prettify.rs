@@ -426,7 +426,6 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
             result.push_str(&definition.url.color(color).to_string());
             result.push_str(" ");
             result.push_str(&definition.title?.color(color).to_string());
-            println!("{}", result);
             Some(result)
         }
 
