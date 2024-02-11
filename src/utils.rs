@@ -49,9 +49,6 @@ pub fn store_colors(prettified: &Vec<String>) -> HashMap<usize, String> {
         if line.trim().is_empty() || line_color == "\x1b[0m" {
             // If the line is empty or the color of the current line is default, reset the current color to default
             current_color = String::from("\x1b[0m");
-        } else if line_color != "\x1b[0m" {
-            // If the color of the current line is not default, update the current color
-            current_color = line_color;
         }
 
         // Store the current color for the current line number
