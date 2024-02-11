@@ -18,7 +18,7 @@ pub fn run_code(
         "ruby" | "rb" => run_ruby_code(code, runtime_map.get("ruby").unwrap().as_str()),
         "c" | "c++" | "cpp" => run_c_code(code, runtime_map.get("c").unwrap().as_str()),
         "java" => run_java_code(code, runtime_map.get("java").unwrap().as_str()),
-        "rust" => run_rust_code(code, runtime_map.get("rust").unwrap().as_str()),
+        "rs" | "rust" => run_rust_code(code, runtime_map.get("rust").unwrap().as_str()),
         _ => Err("Language not supported".to_string())?,
     };
     output
