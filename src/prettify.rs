@@ -881,6 +881,11 @@ pub fn prettify(
             }
         }
     }
+    //remove the last line if it is an empty line
+    // this to ensure that the content is not padded with an extra line and improve the multiple rendering methods; the extra line is not highlighted or styled
+    if prettified.ends_with('\n') {
+        prettified.pop();
+    }
 
     return Ok(align_content(prettified, style_map, highlight_line_num));
 }
