@@ -17,6 +17,7 @@ ordered_list: white
 unordered_list: white
 link_text: black
 link_url: blue
+definition: yellow
 
 # Terminal styles
 

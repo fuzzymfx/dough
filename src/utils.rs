@@ -112,6 +112,7 @@ pub fn create_style(project: std::path::PathBuf) -> Result<(), Box<dyn std::erro
         unordered_list: white
         link_text: black
         link_url: blue
+        definition: yellow
         
         # Terminal styles
         
