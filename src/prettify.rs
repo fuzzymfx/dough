@@ -406,6 +406,30 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
             Some(result)
         }
 
+        mdast::Node::Break(mdast::Break { position: _ }) => Some("\n".to_string()),
+
+        mdast::Node::Delete(delete) => Some(join_children_with(
+            |s| s.strikethrough().to_string(),
+            depth,
+            delete.children,
+        )),
+
+        mdast::Node::Definition(definition) => {
+            let color = styles
+                .get("definition")
+                .map(|s| s.as_str())
+                .unwrap_or("green");
+
+            let mut result = String::from("[");
+            result.push_str(&definition.identifier.color(color).to_string());
+            result.push_str("]: ");
+            result.push_str(&definition.url.color(color).to_string());
+            result.push_str(" ");
+            result.push_str(&definition.title?.color(color).to_string());
+            println!("{}", result);
+            Some(result)
+        }
+
         _ => None,
     }
 }
