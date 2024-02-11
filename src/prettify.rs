@@ -430,6 +430,44 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
             Some(result)
         }
 
+        // not working
+        mdast::Node::InlineMath(math) => {
+            println!("Here1");
+            print!("{}", math.value);
+            let color = styles.get("math").map(|s| s.as_str()).unwrap_or("green");
+
+            let mut result = String::from("$");
+            result.push_str(&math.value.color(color).to_string());
+            result.push_str("$");
+            Some(result)
+        }
+
+        mdast::Node::Math(math) => {
+            println!("Here1");
+            print!("{}", math.value);
+            let color = styles.get("math").map(|s| s.as_str()).unwrap_or("green");
+
+            let mut result = String::from("$");
+            result.push_str(&math.value.color(color).to_string());
+            result.push_str("$");
+            Some(result)
+        }
+
+        mdast::Node::Image(image) => {
+            let color = styles.get("image").map(|s| s.as_str()).unwrap_or("green");
+
+            let mut result = String::from("![");
+            result.push_str(&image.alt.color(color).to_string());
+            result.push_str("](");
+            result.push_str(&image.url.color(color).to_string());
+            result.push_str(")");
+            Some(result)
+        }
+
+        // add support for tables
+        // mdast::Node::Table()
+        // mdast::Node::TableRow()
+        // mdast::Node::TableCell()
         _ => None,
     }
 }
