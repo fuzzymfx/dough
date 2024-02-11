@@ -717,8 +717,8 @@ pub fn align_content(
     let mut lower_bound = 0;
 
     // A HashMap is used to store the colors for each line
-    let mut content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
-    let mut line_color_map = store_colors(&content_lines);
+    let content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
+    let line_color_map = store_colors(&content_lines);
 
     // Custom text alignment, including highlighting
     prettified = align_custom(prettified, highlight_line_num, style_map);
@@ -731,9 +731,6 @@ pub fn align_content(
 
     // align the content horizontally based on the flag set in the style map
     if style_map.get("horizontal_alignment").unwrap() == "true" {
-        content_lines = prettified.lines().map(|s| s.to_string()).collect();
-        line_color_map = store_colors(&content_lines);
-
         prettified = align_horizontal(prettified, style_map, _width, line_color_map);
     }
 
