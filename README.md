@@ -207,17 +207,17 @@ TODO:
 
 <img width="560" alt="syntax-highlighting" src="https://github.com/fuzzymfx/dough/assets/69160388/8b071096-adce-434c-8ff5-5204e6ca19b1">
 
-- [x] *bug* **IMP** Address the color storage issue for multiline elements, ensuring ANSI escape sequences are properly stripped: Refine color correction post-alignment for a seamless visual experience.
-- [x] *bug* custom aligner adds empty lines after text-block alignment
 - [ ]  Scrolling issues in highlight mode:
-  - [ ] *bug* Over Scroll in infinite scrolling
+  - [ ] *bug* Over Scroll in infinite scrolling 
   - [ ] *feat.* Skip empty lines in both highlight and scroll modes
 - [ ] *feat.* Hot Module Reload
 - [ ] *feat.* Add a support for maximum width and height of the terminal. Write a word wrapper.
 - [ ] *feat.* Add comprehensive support for common Markdown elements.
-- [ ] *feat.* Enhance rendering for complex markdown elements like links within headings or lists.
-  - [ ] lists.
-  - [ ] blockquotes.
+- [ ] *feat.* Enhance rendering for complex markdown elements
+  - headings withing blockquotes
+  - links within headings or lists 
+- [ ] *feat.* Image support for terminals with image capabilities *(Kitty, iTerm2, etc.)*
+
 
 ## Acknowledgements
 
