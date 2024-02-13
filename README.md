@@ -129,6 +129,9 @@ You can customize the presentation by modifying the `style.yml` file in the proj
 ```yaml
 # This file contains the default style settings for the terminal markdown renderer.
 
+# The highlighter
+highlighter: black on white
+
 # Markdown styles
 h1: red
 h2: yellow
@@ -136,22 +139,21 @@ h3: green
 h4: cyan
 h5: blue
 h6: purple
-code: black on white
-blockquote: black on white
+blockquote: white on black
 ordered_list_bullet: yellow
 unordered_list_bullet: yellow
 ordered_list: white
 unordered_list: white
 link_text: black
 link_url: blue
-thematic_break: white on black
+definition: yellow
 
 # Terminal styles
 
 # clear will clear the terminal before rendering, you would need to scroll down to render each line
 clear: false
 
-box: false
+box: true
 box_color: black on white
 
 # vertical_alignment will vertically align the text to the middle of the terminal
@@ -161,35 +163,31 @@ vertical_alignment: true
 horizontal_alignment: true
 
 # syntax_highlighting will highlight the code syntax
-# this works well with GPU accelerated terminals, but not with the default Mac OS terminal. We suggest using iTerm2 or Kitty, or disabling this feature.
+# this works well with the warp terminal, but not with the default Mac OS terminal
 
 syntax_highlighting: true
 synatx_theme: base16-ocean.dark
 #themes:[base16-ocean.dark,base16-eighties.dark,base16-mocha.dark,base16-ocean.light, Solarized (dark) and Solarized (light)]
 syntax_bg: false
 
-# Displays the slide number/total slides
-progress: false 
+# shows the progress of the presentation: " i [1/10] " : current slide/total slides in the bottom left corner
+progress: false
 
 # runtime map is used to store the runtimes for different languages
 # you can add your own runtimes for different languages. Currently, the following runtimes are supported:
 
--runtime_map:
-  python: python3
-  sh: bash
-  bash: bash
-  javascript: node
-  typescript: node
-  ts: tsc
-  c: gcc
-  cpp: g++
-  java: javac
-  go: go run
-  rust: cargo run
-  ruby: ruby
-  php: php
-  swift: swift
-  kotlin: kotlinc
+- runtime_map:
+    python: python3
+    javascript: node
+    ruby: ruby
+    c: gcc
+    cpp: g++
+    java: java
+    go: go run
+    rust: cargo run
+    swift: swift
+    kotlin: kotlinc
+    typescript: tsc
 ```
 
 
