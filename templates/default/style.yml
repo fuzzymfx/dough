@@ -17,6 +17,7 @@ ordered_list: white
 unordered_list: white
 link_text: black
 link_url: blue
+definition: yellow
 
 # Terminal styles
 
@@ -40,7 +41,8 @@ synatx_theme: base16-ocean.dark
 #themes:[base16-ocean.dark,base16-eighties.dark,base16-mocha.dark,base16-ocean.light, Solarized (dark) and Solarized (light)]
 syntax_bg: false
 
-progress: true
+# shows the progress of the presentation: " i [1/10] " : current slide/total slides in the bottom left corner
+progress: false
 
 # runtime map is used to store the runtimes for different languages
 # you can add your own runtimes for different languages. Currently, the following runtimes are supported:
