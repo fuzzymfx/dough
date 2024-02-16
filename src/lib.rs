@@ -408,12 +408,10 @@ impl Project {
                     return Err(Box::new(DoughError(
                         "No slides found in the project".into(),
                     )));
-                } else {
-                    print!("{}", termion::cursor::Show);
-                    print!("{}", termion::clear::All);
-                    print!("Thank you :)\n");
-                    exit(0)
                 }
+                print!("{}", termion::cursor::Show);
+                print!("{}", termion::clear::All);
+                print!("Thank you :)\n");
             }
             // The contents of the file are read and the comments are removed.
             let file_contents = fs::read_to_string(&file_path)?;
@@ -490,6 +488,10 @@ impl Project {
                     lines = 1;
                 }
                 (NavigationAction::Exit, _new_lines_value) => {
+                    // The presentation is exited.
+                    print!("{}", termion::cursor::Show);
+                    print!("{}", termion::clear::All);
+                    print!("Thank you :)\n");
                     exit(0);
                 }
                 (NavigationAction::None, _new_lines_value) => {}
