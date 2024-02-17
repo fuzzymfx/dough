@@ -411,7 +411,7 @@ impl Project {
                 }
                 print!("{}", termion::cursor::Show);
                 print!("{}", termion::clear::All);
-                print!("Thank you :)\n");
+                println!("Thank you :)");
             }
             // The contents of the file are read and the comments are removed.
             let file_contents = fs::read_to_string(&file_path)?;
@@ -491,7 +491,7 @@ impl Project {
                     // The presentation is exited.
                     print!("{}", termion::cursor::Show);
                     print!("{}", termion::clear::All);
-                    print!("Thank you :)\n");
+                    println!("Thank you :)");
                     exit(0);
                 }
                 (NavigationAction::None, _new_lines_value) => {}
