@@ -1,6 +1,7 @@
 extern crate lazy_static;
 use crate::utils::{
-    calculate_length_of_line, calculate_length_of_longest_line, store_colors, strip_ansi_codes,
+    calculate_length_of_line, calculate_length_of_longest_line, check_if_text_is_right_aligned,
+    store_colors, strip_ansi_codes,
 };
 
 use std::collections::BTreeMap;
@@ -536,9 +537,11 @@ pub fn align_horizontal(
     style_map: &HashMap<String, String>,
     width: u16,
     line_color_map: HashMap<usize, String>,
+    right_alignment: bool,
 ) -> String {
     let blank_chars;
-    let longest_line = calculate_length_of_longest_line(&prettified, true);
+    let spaces = if right_alignment { false } else { true };
+    let longest_line = calculate_length_of_longest_line(&prettified, spaces);
 
     if style_map.get("horizontal_alignment").unwrap() == "false" {
         blank_chars = 0;
@@ -743,6 +746,7 @@ pub fn align_content(
     // Bounds are used for scrolling
     let mut upper_bound = prettified.lines().count() as u32;
     let mut lower_bound = 0;
+    let right_aligned = check_if_text_is_right_aligned(&prettified.clone());
 
     // Custom text alignment, including highlighting
     prettified = align_custom(prettified, highlight_line_num, style_map);
@@ -761,7 +765,7 @@ pub fn align_content(
         let content_lines: Vec<String> = prettified.lines().map(|s| s.to_string()).collect();
         let line_color_map = store_colors(&content_lines);
 
-        prettified = align_horizontal(prettified, style_map, _width, line_color_map);
+        prettified = align_horizontal(prettified, style_map, _width, line_color_map, right_aligned);
     }
 
     // align the content vertically based on the flag set in the style map

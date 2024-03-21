@@ -193,3 +193,13 @@ pub fn create_style(project: std::path::PathBuf) -> Result<(), Box<dyn std::erro
         Ok(())
     }
 }
+
+pub fn check_if_text_is_right_aligned(prettified: &str) -> bool {
+    let line_re = regex::Regex::new(r"\$\[r\]\$").unwrap();
+    let block_re = regex::Regex::new(r"\$\[r\]").unwrap();
+
+    let is_line_right_aligned = line_re.is_match(prettified);
+    let is_block_right_aligned = block_re.is_match(prettified);
+
+    is_line_right_aligned || is_block_right_aligned
+}
