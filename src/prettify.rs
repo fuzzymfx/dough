@@ -538,7 +538,7 @@ pub fn align_horizontal(
     line_color_map: HashMap<usize, String>,
 ) -> String {
     let blank_chars;
-    let longest_line = calculate_length_of_longest_line(&prettified, false);
+    let longest_line = calculate_length_of_longest_line(&prettified, true);
 
     if style_map.get("horizontal_alignment").unwrap() == "false" {
         blank_chars = 0;

@@ -34,7 +34,7 @@ pub fn calculate_length_of_longest_line(prettified: &String, spaces: bool) -> us
 
     let lines_clone = lines.clone();
 
-    // Calculate the length of the longest line without considering spaces
+    // Calculate the length of the longest line with or without spaces
     let max_length = lines_clone
         .iter()
         .map(|s| {
