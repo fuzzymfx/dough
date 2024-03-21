@@ -412,6 +412,7 @@ impl Project {
                 print!("{}", termion::cursor::Show);
                 print!("{}", termion::clear::All);
                 println!("Thank you :)");
+                exit(0)
             }
             // The contents of the file are read and the comments are removed.
             let file_contents = fs::read_to_string(&file_path)?;
