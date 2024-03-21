@@ -1,5 +1,7 @@
 extern crate lazy_static;
-use crate::utils::{calculate_length_of_longest_line, store_colors, strip_ansi_codes};
+use crate::utils::{
+    calculate_length_of_line, calculate_length_of_longest_line, store_colors, strip_ansi_codes,
+};
 
 use std::collections::BTreeMap;
 use std::sync::Mutex;
@@ -13,6 +15,8 @@ use syntect::easy::HighlightLines;
 use syntect::highlighting::{Style, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
+
+use unicode_width::UnicodeWidthStr;
 
 use lazy_static::lazy_static;
 
@@ -445,7 +449,7 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
         .iter()
         .map(|s| {
             let s = strip_ansi_codes(s).replace("̶", "");
-            s.chars().count()
+            UnicodeWidthStr::width(s.as_str())
         })
         .max()
         .unwrap_or(0);
@@ -466,7 +470,8 @@ pub fn draw_box(content: &str, line_color_map: &HashMap<usize, String>) -> Strin
         free_line = free_line.replace('\t', " ");
 
         // Calculate the number of spaces to be added to the end of the line based on the line free of strikethrough characters
-        let padding_length = max_length - strip_ansi_codes(&free_line).chars().count();
+        let padding_length =
+            max_length - UnicodeWidthStr::width(strip_ansi_codes(&free_line).as_str());
         let padding = " ".repeat(padding_length);
 
         let formatted_line = String::from(*line);
@@ -651,7 +656,7 @@ pub fn align_custom(
             let alignment = captures.get(1).unwrap().as_str();
             // replace the alignment flag with an empty string
             let new_line = aligned_line.replace(&captures[0], "");
-            let line_length = strip_ansi_codes(&new_line).len();
+            let line_length = calculate_length_of_line(&new_line, true);
             match alignment {
                 "c" => {
                     let spaces = (longest_line - line_length) / 2;
@@ -693,7 +698,7 @@ pub fn align_custom(
             // align the block of text based on the alignment flag
 
             for line in block_lines.iter().skip(1) {
-                let line_length = strip_ansi_codes(&line).len();
+                let line_length = calculate_length_of_line(line, true);
                 match alignment {
                     "c" => {
                         let spaces = (longest_line - line_length) / 2;

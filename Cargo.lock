@@ -135,6 +135,7 @@ dependencies = [
  "regex",
  "syntect",
  "termion",
+ "unicode-width",
 ]
 
 [[package]]

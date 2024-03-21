@@ -2,10 +2,34 @@ use paris::Logger;
 use regex::Regex;
 use std::collections::HashMap;
 
+pub fn calculate_length_of_line(line: &str, spaces: bool) -> usize {
+    let leading_spaces = strip_ansi_codes(line)
+        .chars()
+        .take_while(|c| *c == ' ')
+        .count();
+
+    let line = strip_ansi_codes(line).replace("̶", "");
+    let line_length = if spaces {
+        line.chars().count()
+    } else {
+        line.chars().filter(|c| *c != ' ').count()
+    };
+    line_length + leading_spaces
+}
+
 pub fn calculate_length_of_longest_line(prettified: &String, spaces: bool) -> usize {
+    // line_re is used to match the alignment flag for a line
     let line_re = regex::Regex::new(r"\$\[([clr])\]\$").unwrap();
+    // block_re is used to match the alignment flag for a block of text
+    let block_re = regex::Regex::new(r"\$\[([clr])\]").unwrap();
+    // end_block_re is used to match the end block of text
+    let end_block_re = regex::Regex::new(r"\$\[e\]").unwrap();
+
     //replace the color codes with empty string
     let prettified = line_re.replace_all(prettified, "");
+    let prettified = block_re.replace_all(&prettified, "");
+    let prettified = end_block_re.replace_all(&prettified, "");
+
     let lines: Vec<&str> = prettified.split('\n').collect();
 
     let lines_clone = lines.clone();

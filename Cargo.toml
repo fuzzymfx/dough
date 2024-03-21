@@ -19,6 +19,7 @@ termion = "2.0.3"
 regex = "1"
 lazy_static = "1.4.0"
 syntect = "4.5.0"
+unicode-width = "0.1.11"
 
 [env]
 RUST_BACKTRACE = 0
