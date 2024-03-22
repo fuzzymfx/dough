@@ -47,7 +47,7 @@ pub fn calculate_length_of_longest_line(prettified: &String, spaces: bool) -> us
             let line_length = if spaces {
                 s.chars().count()
             } else {
-                s.chars().filter(|c| *c != ' ').count()
+                s.chars().count() - leading_spaces
             };
             line_length + leading_spaces
         })
