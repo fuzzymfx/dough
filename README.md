@@ -166,7 +166,7 @@ horizontal_alignment: true
 # this works well with the warp terminal, but not with the default Mac OS terminal
 
 syntax_highlighting: true
-synatx_theme: base16-ocean.dark
+syntax_theme: base16-ocean.dark
 #themes:[base16-ocean.dark,base16-eighties.dark,base16-mocha.dark,base16-ocean.light, Solarized (dark) and Solarized (light)]
 syntax_bg: false
 
