@@ -663,13 +663,13 @@ pub fn align_custom(
             match alignment {
                 "c" => {
                     let spaces = (longest_line - line_length) / 2;
-                    let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+                    let mut new_line = format!("{}{}{}", "\x1b[0m", " ".repeat(spaces), line);
                     new_line = new_line.replace(&captures[0], "");
                     aligned_line = new_line;
                 }
                 "r" => {
                     let spaces = longest_line - line_length - 1;
-                    let mut new_line = format!("{}{}", " ".repeat(spaces), line);
+                    let mut new_line = format!("{}{}{}", "\x1b[0m", " ".repeat(spaces), line);
                     new_line = new_line.replace(&captures[0], "");
                     aligned_line = new_line;
                 }
@@ -705,12 +705,12 @@ pub fn align_custom(
                 match alignment {
                     "c" => {
                         let spaces = (longest_line - line_length) / 2;
-                        let new_line = format!("{}{}\n", " ".repeat(spaces), line);
+                        let new_line = format!("{}{}{}\n", "\x1b[0m", " ".repeat(spaces), line);
                         aligned_block.push_str(&new_line);
                     }
                     "r" => {
                         let spaces = longest_line - line_length;
-                        let new_line = format!("{}{}\n", " ".repeat(spaces), line);
+                        let new_line = format!("{}{}{}\n", "\x1b[0m", " ".repeat(spaces), line);
                         aligned_block.push_str(&new_line);
                     }
                     _ => {
