@@ -216,8 +216,9 @@ fn visit_md_node(node: mdast::Node, depth: usize) -> Option<String> {
             let color: &str = styles
                 .get("inline_code")
                 .map(|s| s.as_str())
-                .unwrap_or("green");
+                .unwrap_or("red");
 
+            result.push_str("\x1b[0m");
             result.push_str(&text.color(color).to_string());
             result.push_str("`".replace("`", "").as_str());
 
